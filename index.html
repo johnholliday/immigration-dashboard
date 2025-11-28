@@ -276,7 +276,7 @@
             gap: 20px;
         }
 
-        .dashboard > div:last-child {
+        .dashboard>div:last-child {
             min-width: 0;
             overflow: hidden;
         }
@@ -599,11 +599,13 @@
             </div>
             <div class="panel-section">
                 <h4>Weekly Trend</h4>
-                <p>The bar chart shows incidents per week. The red trend line (3-week moving average) smooths out noise to reveal true escalation or de-escalation patterns.</p>
+                <p>The bar chart shows incidents per week. The red trend line (3-week moving average) smooths out noise
+                    to reveal true escalation or de-escalation patterns.</p>
             </div>
             <div class="panel-section">
                 <h4>Cumulative Counter</h4>
-                <p>The area chart shows running total over time. A steep slope indicates accelerated enforcement; plateaus suggest lulls. The final number shows total documented incidents.</p>
+                <p>The area chart shows running total over time. A steep slope indicates accelerated enforcement;
+                    plateaus suggest lulls. The final number shows total documented incidents.</p>
             </div>
             <div class="panel-section">
                 <h4>Incident Heatmap</h4>
@@ -622,7 +624,8 @@
             </div>
             <div class="panel-section">
                 <h4>State Map</h4>
-                <p>The choropleth shows incident density by state. Darker colors indicate higher enforcement activity. Compare this to immigrant population data to identify disproportionate targeting.</p>
+                <p>The choropleth shows incident density by state. Darker colors indicate higher enforcement activity.
+                    Compare this to immigrant population data to identify disproportionate targeting.</p>
             </div>
             <div class="panel-section">
                 <h4>Top Locations</h4>
@@ -631,11 +634,13 @@
             </div>
             <div class="panel-section">
                 <h4>Sensitive Locations</h4>
-                <p>Enforcement at schools, churches, hospitals violates DHS policy. The presence/absence chart shows overall sensitive location incidents.</p>
+                <p>Enforcement at schools, churches, hospitals violates DHS policy. The presence/absence chart shows
+                    overall sensitive location incidents.</p>
             </div>
             <div class="panel-section">
                 <h4>Sensitive Location Breakdown</h4>
-                <p>Shows which types of protected spaces are most frequently violated—schools, hospitals, churches, etc. Patterns here indicate systemic disregard for constitutional boundaries.</p>
+                <p>Shows which types of protected spaces are most frequently violated—schools, hospitals, churches, etc.
+                    Patterns here indicate systemic disregard for constitutional boundaries.</p>
             </div>
         </div>
 
@@ -680,11 +685,13 @@
             </div>
             <div class="panel-section">
                 <h4>Single vs Multi-Category</h4>
-                <p>Shows how many incidents involve just one type of misconduct versus multiple. High multi-category rates suggest escalating situations.</p>
+                <p>Shows how many incidents involve just one type of misconduct versus multiple. High multi-category
+                    rates suggest escalating situations.</p>
             </div>
             <div class="panel-section">
                 <h4>Citizen vs Non-Citizen by Category</h4>
-                <p>Compares which types of incidents affect U.S. citizens vs non-citizens. Disproportionate citizen involvement in certain categories reveals civil liberties concerns.</p>
+                <p>Compares which types of incidents affect U.S. citizens vs non-citizens. Disproportionate citizen
+                    involvement in certain categories reveals civil liberties concerns.</p>
             </div>
             <div class="panel-section">
                 <h4>Data Quality</h4>
@@ -1808,7 +1815,7 @@
             const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
             // Sort incidents by date and calculate cumulative count
-            const sortedIncidents = [...filteredData].sort((a, b) => 
+            const sortedIncidents = [...filteredData].sort((a, b) =>
                 new Date(a.date) - new Date(b.date)
             );
 
@@ -1971,7 +1978,7 @@
                 x: types,
                 y: counts,
                 type: 'bar',
-                marker: { 
+                marker: {
                     color: colors,
                     line: { color: isDark ? '#fff' : '#333', width: 1 }
                 },
@@ -2032,7 +2039,7 @@
             });
 
             // Format category names for display
-            const displayCategories = categories.map(cat => 
+            const displayCategories = categories.map(cat =>
                 cat.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
             );
 
