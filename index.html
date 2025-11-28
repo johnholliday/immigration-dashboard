@@ -1985,8 +1985,10 @@
                 margin: { l: 20, r: 20, t: 60, b: 20 }
             };
 
-            Plotly.purge('chart-state-map');
-            Plotly.newPlot('chart-state-map', data, layout, { responsive: true });
+            const container = document.getElementById('chart-state-map');
+            Plotly.purge(container);
+            container.innerHTML = '';
+            Plotly.newPlot(container, data, layout, { responsive: true });
         }
 
         // Sensitive Location Breakdown by Type
