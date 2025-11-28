@@ -432,6 +432,42 @@
             margin-bottom: 40px;
         }
 
+        /* Statistics Summary Cards */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stats-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .stats-card h4 {
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .stats-card .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 10px;
+        }
+
+        .stats-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
         .incident-card {
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -828,10 +864,10 @@
                     <div id="chart-combinations" class="chart-full"></div>
                     <div id="chart-category-breakdown" class="chart-full"></div>
                     <div id="chart-citizen-category" class="chart-full"></div>
-                    <div class="chart-grid">
-                        <div id="stats-sources"></div>
-                        <div id="stats-rate"></div>
-                        <div id="stats-multi"></div>
+                    <div class="stats-summary">
+                        <div class="stats-card" id="stats-sources"></div>
+                        <div class="stats-card" id="stats-rate"></div>
+                        <div class="stats-card" id="stats-multi"></div>
                     </div>
                 </div>
             </div>
@@ -2109,17 +2145,31 @@
             });
 
             const sourceDiv = document.getElementById('stats-sources');
-            const topSources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(s => s[0]);
-            sourceDiv.innerHTML = `<h4>Top Sources: ${topSources.join(', ')}</h4>`;
+            const topSources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            sourceDiv.innerHTML = `
+                <h4>Top Sources</h4>
+                <div class="stat-value">${topSources.length > 0 ? topSources[0][0] : 'N/A'}</div>
+                <div class="stat-label">${topSources.length > 0 ? topSources[0][1] + ' incidents' : ''}</div>
+            `;
 
             const dates = filteredData.map(d => d.date.getTime());
-            const totalDays = (Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24) + 1;
+            const totalDays = filteredData.length > 0 ? (Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24) + 1 : 1;
+            const avgRate = (filteredData.length / totalDays).toFixed(2);
             const rateDiv = document.getElementById('stats-rate');
-            rateDiv.innerHTML = `<h4>Avg Incidents/Day: ${(filteredData.length / totalDays).toFixed(2)}</h4>`;
+            rateDiv.innerHTML = `
+                <h4>Avg Incidents/Day</h4>
+                <div class="stat-value">${avgRate}</div>
+                <div class="stat-label">over ${Math.round(totalDays)} days</div>
+            `;
 
-            const multiPct = (filteredData.filter(d => d.categories.length > 1).length / filteredData.length * 100).toFixed(1);
+            const multiCount = filteredData.filter(d => d.categories.length > 1).length;
+            const multiPct = filteredData.length > 0 ? (multiCount / filteredData.length * 100).toFixed(1) : 0;
             const multiDiv = document.getElementById('stats-multi');
-            multiDiv.innerHTML = `<h4>Multi-Category: ${multiPct}%</h4>`;
+            multiDiv.innerHTML = `
+                <h4>Multi-Category</h4>
+                <div class="stat-value">${multiPct}%</div>
+                <div class="stat-label">${multiCount} of ${filteredData.length} incidents</div>
+            `;
         }
 
         // Render incident list
