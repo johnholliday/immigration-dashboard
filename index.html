@@ -77,7 +77,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            transition: margin-right 0.3s;
+            transition: padding-right 0.3s;
         }
 
         /* Control Buttons */
@@ -215,8 +215,7 @@
 
         /* Shift container when panel is open */
         body.panel-open .container {
-            margin-right: 175px;
-            margin-left: -175px;
+            padding-right: 370px;
         }
 
         /* Header */
@@ -275,6 +274,11 @@
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 20px;
+        }
+
+        .dashboard > div:last-child {
+            min-width: 0;
+            overflow: hidden;
         }
 
         .sidebar {
@@ -386,6 +390,8 @@
 
         .tab-content {
             display: none;
+            overflow: hidden;
+            width: 100%;
         }
 
         .tab-content.active {
@@ -399,24 +405,31 @@
             justify-content: center !important;
             align-items: center !important;
             min-height: 400px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .chart-full>div,
         .chart-grid>div>div {
             margin: 0 auto !important;
-            max-width: 900px !important;
+            max-width: 100% !important;
             width: 100% !important;
         }
 
         .chart-full>div {
-            max-width: 1000px !important;
+            max-width: 100% !important;
         }
 
         .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .chart-full {
+            margin-bottom: 40px;
         }
 
         .incident-card {
@@ -518,8 +531,7 @@
             }
 
             body.panel-open .container {
-                margin-right: 0;
-                margin-left: auto;
+                padding-right: 20px;
             }
         }
     </style>
@@ -582,9 +594,16 @@
                 <p>Understand how enforcement intensity changes over time.</p>
             </div>
             <div class="panel-section">
-                <h4>Cumulative Timeline</h4>
-                <p>The line should rise steadily. A steep slope indicates accelerated enforcement activity. Plateaus may
-                    suggest lulls or under-reporting.</p>
+                <h4>Daily Timeline</h4>
+                <p>Shows individual incident occurrences by date. Clustering indicates coordinated operations.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Weekly Trend</h4>
+                <p>The bar chart shows incidents per week. The red trend line (3-week moving average) smooths out noise to reveal true escalation or de-escalation patterns.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Cumulative Counter</h4>
+                <p>The area chart shows running total over time. A steep slope indicates accelerated enforcement; plateaus suggest lulls. The final number shows total documented incidents.</p>
             </div>
             <div class="panel-section">
                 <h4>Incident Heatmap</h4>
@@ -592,8 +611,6 @@
                     before weekends).</p>
                 <p><strong>Vertical patterns</strong>: Dark columns mark high-activity weeks—correlate these with policy
                     changes or political events.</p>
-                <p><strong>Clusters</strong>: Groups of dark cells reveal coordinated operations vs. routine patrols.
-                </p>
             </div>
         </div>
 
@@ -604,14 +621,21 @@
                 <p>Location patterns reveal enforcement priorities and potential targeting.</p>
             </div>
             <div class="panel-section">
+                <h4>State Map</h4>
+                <p>The choropleth shows incident density by state. Darker colors indicate higher enforcement activity. Compare this to immigrant population data to identify disproportionate targeting.</p>
+            </div>
+            <div class="panel-section">
                 <h4>Top Locations</h4>
                 <p>Major cities dominate due to population and reporting infrastructure. Unusual spikes in smaller
                     cities may indicate targeted operations.</p>
             </div>
             <div class="panel-section">
                 <h4>Sensitive Locations</h4>
-                <p>Enforcement at schools, churches, hospitals violates DHS policy. The breakdown shows where these
-                    constitutional boundaries are being crossed.</p>
+                <p>Enforcement at schools, churches, hospitals violates DHS policy. The presence/absence chart shows overall sensitive location incidents.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Sensitive Location Breakdown</h4>
+                <p>Shows which types of protected spaces are most frequently violated—schools, hospitals, churches, etc. Patterns here indicate systemic disregard for constitutional boundaries.</p>
             </div>
         </div>
 
@@ -653,6 +677,14 @@
                 <h4>Category Overlaps</h4>
                 <p>Incidents often involve multiple misconduct types. Frequent combinations suggest systemic issues
                     where one violation leads to others.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Single vs Multi-Category</h4>
+                <p>Shows how many incidents involve just one type of misconduct versus multiple. High multi-category rates suggest escalating situations.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Citizen vs Non-Citizen by Category</h4>
+                <p>Compares which types of incidents affect U.S. citizens vs non-citizens. Disproportionate citizen involvement in certain categories reveals civil liberties concerns.</p>
             </div>
             <div class="panel-section">
                 <h4>Data Quality</h4>
@@ -769,12 +801,16 @@
 
                 <div id="trends" class="tab-content">
                     <div id="chart-timeline" class="chart-full"></div>
+                    <div id="chart-weekly-trend" class="chart-full"></div>
+                    <div id="chart-cumulative" class="chart-full"></div>
                     <div id="chart-heatmap" class="chart-full"></div>
                 </div>
 
                 <div id="geography" class="tab-content">
+                    <div id="chart-state-map" class="chart-full"></div>
                     <div id="chart-locations" class="chart-full"></div>
                     <div id="chart-sensitive" class="chart-full"></div>
+                    <div id="chart-sensitive-breakdown" class="chart-full"></div>
                 </div>
 
                 <div id="details" class="tab-content">
@@ -784,6 +820,7 @@
                 <div id="statistics" class="tab-content">
                     <div id="chart-combinations" class="chart-full"></div>
                     <div id="chart-category-breakdown" class="chart-full"></div>
+                    <div id="chart-citizen-category" class="chart-full"></div>
                     <div class="chart-grid">
                         <div id="stats-sources"></div>
                         <div id="stats-rate"></div>
@@ -1189,6 +1226,11 @@
                 panelToggle.classList.remove('active');
                 localStorage.setItem('panelOpen', 'false');
             }
+
+            // Trigger resize for Plotly charts to reflow
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 350);
         }
 
         // Update panel content based on active tab
@@ -1328,11 +1370,16 @@
             renderMonthlyChart();
             renderCitizenChart();
             renderTimelineChart();
+            renderWeeklyTrendChart();
+            renderCumulativeChart();
             renderHeatmapChart();
+            renderStateMapChart();
             renderLocationChart();
             renderSensitiveChart();
+            renderSensitiveBreakdownChart();
             renderCombinationChart();
             renderCategoryBreakdownChart();
+            renderCitizenCategoryChart();
             renderStatsCharts();
         }
 
@@ -1684,6 +1731,350 @@
 
             Plotly.purge('chart-category-breakdown');
             Plotly.newPlot('chart-category-breakdown', data, layout, config);
+        }
+
+        // Weekly Trend Line Chart
+        function renderWeeklyTrendChart() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#333';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            // Group incidents by week
+            const weeklyData = {};
+            filteredData.forEach(incident => {
+                const date = new Date(incident.date);
+                // Get start of week (Sunday)
+                const startOfWeek = new Date(date);
+                startOfWeek.setDate(date.getDate() - date.getDay());
+                const weekKey = startOfWeek.toISOString().split('T')[0];
+                weeklyData[weekKey] = (weeklyData[weekKey] || 0) + 1;
+            });
+
+            const sortedWeeks = Object.keys(weeklyData).sort();
+            const counts = sortedWeeks.map(w => weeklyData[w]);
+
+            // Calculate 3-week moving average for trend line
+            const trendLine = counts.map((val, idx) => {
+                if (idx < 2) return val;
+                return (counts[idx - 2] + counts[idx - 1] + val) / 3;
+            });
+
+            const data = [
+                {
+                    x: sortedWeeks,
+                    y: counts,
+                    type: 'bar',
+                    name: 'Weekly Incidents',
+                    marker: { color: '#3498db', opacity: 0.7 }
+                },
+                {
+                    x: sortedWeeks,
+                    y: trendLine,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: '3-Week Trend',
+                    line: { color: '#e74c3c', width: 3 }
+                }
+            ];
+
+            const layout = {
+                title: { text: 'Weekly Incident Trend', font: { color: textColor, size: 18 } },
+                xaxis: {
+                    title: 'Week Starting',
+                    color: textColor,
+                    gridcolor: gridColor,
+                    tickangle: -45
+                },
+                yaxis: {
+                    title: 'Number of Incidents',
+                    color: textColor,
+                    gridcolor: gridColor
+                },
+                showlegend: true,
+                legend: { font: { color: textColor }, orientation: 'h', y: -0.25 },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 30, t: 60, b: 100 }
+            };
+
+            Plotly.purge('chart-weekly-trend');
+            Plotly.newPlot('chart-weekly-trend', data, layout, { responsive: true });
+        }
+
+        // Cumulative Incident Counter
+        function renderCumulativeChart() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#333';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            // Sort incidents by date and calculate cumulative count
+            const sortedIncidents = [...filteredData].sort((a, b) => 
+                new Date(a.date) - new Date(b.date)
+            );
+
+            const dates = [];
+            const cumulative = [];
+            let count = 0;
+
+            sortedIncidents.forEach(incident => {
+                count++;
+                dates.push(incident.date);
+                cumulative.push(count);
+            });
+
+            const data = [{
+                x: dates,
+                y: cumulative,
+                type: 'scatter',
+                mode: 'lines',
+                fill: 'tozeroy',
+                name: 'Cumulative Incidents',
+                line: { color: '#9b59b6', width: 2 },
+                fillcolor: 'rgba(155, 89, 182, 0.3)'
+            }];
+
+            const layout = {
+                title: { text: 'Cumulative Incident Count Over Time', font: { color: textColor, size: 18 } },
+                xaxis: {
+                    title: 'Date',
+                    color: textColor,
+                    gridcolor: gridColor
+                },
+                yaxis: {
+                    title: 'Total Incidents',
+                    color: textColor,
+                    gridcolor: gridColor
+                },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 30, t: 60, b: 60 },
+                annotations: [{
+                    x: dates[dates.length - 1],
+                    y: cumulative[cumulative.length - 1],
+                    text: `Total: ${cumulative[cumulative.length - 1]}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    font: { color: textColor, size: 14 }
+                }]
+            };
+
+            Plotly.purge('chart-cumulative');
+            Plotly.newPlot('chart-cumulative', data, layout, { responsive: true });
+        }
+
+        // State Choropleth Map
+        function renderStateMapChart() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#333';
+
+            // State abbreviation mapping
+            const stateAbbrev = {
+                'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+                'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+                'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+                'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+                'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+                'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+                'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+                'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+                'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+                'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+                'District of Columbia': 'DC'
+            };
+
+            // Count incidents by state
+            const stateCounts = {};
+            filteredData.forEach(incident => {
+                const state = incident.state;
+                stateCounts[state] = (stateCounts[state] || 0) + 1;
+            });
+
+            const locations = [];
+            const z = [];
+            const text = [];
+
+            Object.entries(stateCounts).forEach(([state, count]) => {
+                if (stateAbbrev[state]) {
+                    locations.push(stateAbbrev[state]);
+                    z.push(count);
+                    text.push(`${state}: ${count} incidents`);
+                }
+            });
+
+            const data = [{
+                type: 'choropleth',
+                locationmode: 'USA-states',
+                locations: locations,
+                z: z,
+                text: text,
+                colorscale: [
+                    [0, isDark ? '#1a1a2e' : '#f0f8ff'],
+                    [0.25, '#3498db'],
+                    [0.5, '#9b59b6'],
+                    [0.75, '#e74c3c'],
+                    [1, '#c0392b']
+                ],
+                colorbar: {
+                    title: { text: 'Incidents', font: { color: textColor } },
+                    tickfont: { color: textColor }
+                },
+                hoverinfo: 'text'
+            }];
+
+            const layout = {
+                title: { text: 'Incident Density by State', font: { color: textColor, size: 18 } },
+                geo: {
+                    scope: 'usa',
+                    showlakes: false,
+                    bgcolor: 'transparent',
+                    lakecolor: 'transparent',
+                    landcolor: isDark ? '#2d2d2d' : '#f5f5f5',
+                    subunitcolor: isDark ? '#444' : '#ccc'
+                },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 20, r: 20, t: 60, b: 20 }
+            };
+
+            Plotly.purge('chart-state-map');
+            Plotly.newPlot('chart-state-map', data, layout, { responsive: true });
+        }
+
+        // Sensitive Location Breakdown by Type
+        function renderSensitiveBreakdownChart() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#333';
+
+            // Count by sensitive location type
+            const locationTypes = {};
+            filteredData.forEach(incident => {
+                if (incident.sensitiveLocation) {
+                    const type = incident.sensitiveLocation;
+                    locationTypes[type] = (locationTypes[type] || 0) + 1;
+                }
+            });
+
+            const types = Object.keys(locationTypes);
+            const counts = Object.values(locationTypes);
+
+            // Define colors for each type
+            const colorMap = {
+                'School': '#e74c3c',
+                'Hospital': '#3498db',
+                'Church': '#9b59b6',
+                'Courthouse': '#f39c12',
+                'Sensitive Location': '#1abc9c'
+            };
+            const colors = types.map(t => colorMap[t] || '#95a5a6');
+
+            const data = [{
+                x: types,
+                y: counts,
+                type: 'bar',
+                marker: { 
+                    color: colors,
+                    line: { color: isDark ? '#fff' : '#333', width: 1 }
+                },
+                text: counts.map(c => c.toString()),
+                textposition: 'outside',
+                textfont: { color: textColor }
+            }];
+
+            const layout = {
+                title: { text: 'Sensitive Location Incidents by Type', font: { color: textColor, size: 18 } },
+                xaxis: {
+                    title: 'Location Type',
+                    color: textColor
+                },
+                yaxis: {
+                    title: 'Number of Incidents',
+                    color: textColor
+                },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 30, t: 60, b: 80 },
+                showlegend: false
+            };
+
+            Plotly.purge('chart-sensitive-breakdown');
+            Plotly.newPlot('chart-sensitive-breakdown', data, layout, { responsive: true });
+        }
+
+        // U.S. Citizen Incidents by Category
+        function renderCitizenCategoryChart() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#333';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+            // Get all unique categories
+            const allCategories = new Set();
+            filteredData.forEach(incident => {
+                incident.categories.forEach(cat => allCategories.add(cat));
+            });
+            const categories = Array.from(allCategories);
+
+            // Count by category for citizens vs non-citizens
+            const citizenCounts = {};
+            const nonCitizenCounts = {};
+            categories.forEach(cat => {
+                citizenCounts[cat] = 0;
+                nonCitizenCounts[cat] = 0;
+            });
+
+            filteredData.forEach(incident => {
+                incident.categories.forEach(cat => {
+                    if (incident.usCitizen) {
+                        citizenCounts[cat]++;
+                    } else {
+                        nonCitizenCounts[cat]++;
+                    }
+                });
+            });
+
+            // Format category names for display
+            const displayCategories = categories.map(cat => 
+                cat.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+            );
+
+            const data = [
+                {
+                    x: displayCategories,
+                    y: categories.map(c => citizenCounts[c]),
+                    name: 'U.S. Citizens',
+                    type: 'bar',
+                    marker: { color: '#e74c3c' }
+                },
+                {
+                    x: displayCategories,
+                    y: categories.map(c => nonCitizenCounts[c]),
+                    name: 'Non-Citizens',
+                    type: 'bar',
+                    marker: { color: '#3498db' }
+                }
+            ];
+
+            const layout = {
+                title: { text: 'Incident Categories: U.S. Citizens vs Non-Citizens', font: { color: textColor, size: 18 } },
+                barmode: 'group',
+                xaxis: {
+                    title: 'Category',
+                    color: textColor,
+                    tickangle: -30
+                },
+                yaxis: {
+                    title: 'Number of Incidents',
+                    color: textColor,
+                    gridcolor: gridColor
+                },
+                showlegend: true,
+                legend: { font: { color: textColor }, orientation: 'h', y: -0.3 },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 30, t: 60, b: 120 }
+            };
+
+            Plotly.purge('chart-citizen-category');
+            Plotly.newPlot('chart-citizen-category', data, layout, { responsive: true });
         }
 
         function renderStatsCharts() {
