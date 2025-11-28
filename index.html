@@ -1426,6 +1426,16 @@
             renderStatsCharts();
         }
 
+        // Helper function to safely render a Plotly chart
+        function renderPlotlyChart(containerId, data, layout, config = { responsive: true }) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                Plotly.purge(container);
+                container.innerHTML = '';
+                Plotly.newPlot(container, data, layout, config);
+            }
+        }
+
         function renderCategoryChart() {
             const categoryCounts = {};
             filteredData.forEach(incident => {
@@ -1452,8 +1462,7 @@
                 margin: { l: 60, r: 60, t: 60, b: 60 }
             };
 
-            Plotly.purge('chart-categories');
-            Plotly.newPlot('chart-categories', data, layout, { responsive: true });
+            renderPlotlyChart('chart-categories', data, layout);
         }
 
         function renderMonthlyChart() {
@@ -1483,8 +1492,7 @@
                 margin: { l: 60, r: 60, t: 60, b: 60 }
             };
 
-            Plotly.purge('chart-monthly');
-            Plotly.newPlot('chart-monthly', data, layout, { responsive: true });
+            renderPlotlyChart('chart-monthly', data, layout);
         }
 
         function renderCitizenChart() {
@@ -1513,8 +1521,7 @@
                 margin: { l: 60, r: 60, t: 60, b: 60 }
             };
 
-            Plotly.purge('chart-citizen');
-            Plotly.newPlot('chart-citizen', data, layout, { responsive: true });
+            renderPlotlyChart('chart-citizen', data, layout);
         }
 
         function renderTimelineChart() {
@@ -1543,8 +1550,7 @@
                 margin: { l: 60, r: 60, t: 60, b: 60 }
             };
 
-            Plotly.purge('chart-timeline');
-            Plotly.newPlot('chart-timeline', data, layout, { responsive: true });
+            renderPlotlyChart('chart-timeline', data, layout);
         }
 
         function renderHeatmapChart() {
@@ -1579,8 +1585,7 @@
                 margin: { l: 60, r: 60, t: 60, b: 60 }
             };
 
-            Plotly.purge('chart-heatmap');
-            Plotly.newPlot('chart-heatmap', data, layout, { responsive: true });
+            renderPlotlyChart('chart-heatmap', data, layout);
         }
 
         function renderLocationChart() {
@@ -1632,8 +1637,7 @@
                 displayModeBar: false
             };
 
-            Plotly.purge('chart-locations');
-            Plotly.newPlot('chart-locations', data, layout, config);
+            renderPlotlyChart('chart-locations', data, layout, config);
         }
 
         function renderSensitiveChart() {
@@ -1660,8 +1664,7 @@
                 margin: { l: 60, r: 60, t: 60, b: 60 }
             };
 
-            Plotly.purge('chart-sensitive');
-            Plotly.newPlot('chart-sensitive', data, layout, { responsive: true });
+            renderPlotlyChart('chart-sensitive', data, layout);
         }
 
         function renderCombinationChart() {
@@ -1718,8 +1721,7 @@
                 displayModeBar: false
             };
 
-            Plotly.purge('chart-combinations');
-            Plotly.newPlot('chart-combinations', data, layout, config);
+            renderPlotlyChart('chart-combinations', data, layout, config);
         }
 
         function renderCategoryBreakdownChart() {
@@ -1778,8 +1780,7 @@
                 displayModeBar: false
             };
 
-            Plotly.purge('chart-category-breakdown');
-            Plotly.newPlot('chart-category-breakdown', data, layout, config);
+            renderPlotlyChart('chart-category-breakdown', data, layout, config);
         }
 
         // Weekly Trend Line Chart
@@ -1846,8 +1847,7 @@
                 margin: { l: 60, r: 30, t: 60, b: 100 }
             };
 
-            Plotly.purge('chart-weekly-trend');
-            Plotly.newPlot('chart-weekly-trend', data, layout, { responsive: true });
+            renderPlotlyChart('chart-weekly-trend', data, layout);
         }
 
         // Cumulative Incident Counter
@@ -1907,8 +1907,7 @@
                 }]
             };
 
-            Plotly.purge('chart-cumulative');
-            Plotly.newPlot('chart-cumulative', data, layout, { responsive: true });
+            renderPlotlyChart('chart-cumulative', data, layout);
         }
 
         // State Choropleth Map
@@ -1985,10 +1984,7 @@
                 margin: { l: 20, r: 20, t: 60, b: 20 }
             };
 
-            const container = document.getElementById('chart-state-map');
-            Plotly.purge(container);
-            container.innerHTML = '';
-            Plotly.newPlot(container, data, layout, { responsive: true });
+            renderPlotlyChart('chart-state-map', data, layout);
         }
 
         // Sensitive Location Breakdown by Type
@@ -2047,8 +2043,7 @@
                 showlegend: false
             };
 
-            Plotly.purge('chart-sensitive-breakdown');
-            Plotly.newPlot('chart-sensitive-breakdown', data, layout, { responsive: true });
+            renderPlotlyChart('chart-sensitive-breakdown', data, layout);
         }
 
         // U.S. Citizen Incidents by Category
@@ -2124,8 +2119,7 @@
                 margin: { l: 60, r: 30, t: 60, b: 120 }
             };
 
-            Plotly.purge('chart-citizen-category');
-            Plotly.newPlot('chart-citizen-category', data, layout, { responsive: true });
+            renderPlotlyChart('chart-citizen-category', data, layout);
         }
 
         function renderStatsCharts() {
