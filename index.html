@@ -116,20 +116,6 @@
             color: white;
         }
 
-        .control-btn.refreshing {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         /* Explanatory Panel */
         #explanatory-panel {
             position: fixed;
@@ -549,9 +535,6 @@
 <body>
     <!-- Control Buttons -->
     <div class="control-buttons">
-        <button class="control-btn" id="refresh-btn" onclick="refreshData()" title="Refresh data">
-            <i class="fas fa-sync-alt" id="refresh-icon"></i>
-        </button>
         <button class="control-btn" id="theme-toggle" onclick="switchTheme()" title="Toggle theme">
             <i class="fas fa-sun" id="theme-icon"></i>
         </button>
@@ -1161,41 +1144,6 @@
         let allData = processRealData();
         let locations = extractLocations(allData);
         let filteredData = [...allData];
-
-        // Refresh data function - reloads from live source
-        async function refreshData() {
-            const refreshBtn = document.getElementById('refresh-btn');
-
-            // Add spinning animation
-            refreshBtn.classList.add('refreshing');
-
-            // Note: In production, this would fetch fresh data from the source
-            // For now, we re-process the embedded data
-            setTimeout(() => {
-                // Re-process data (in production: fetch from API)
-                allData = processRealData();
-                locations = extractLocations(allData);
-                filteredData = [...allData];
-
-                // Rebuild location filter
-                const locationSelect = document.getElementById('location-filter');
-                locationSelect.innerHTML = '<option value="All">All Locations</option>';
-                locations.forEach(loc => {
-                    const option = document.createElement('option');
-                    option.value = loc;
-                    option.textContent = loc;
-                    locationSelect.appendChild(option);
-                });
-
-                // Update metrics and charts
-                updateMetrics();
-                renderCharts();
-                renderIncidentList();
-
-                // Remove spinning animation
-                refreshBtn.classList.remove('refreshing');
-            }, 500);
-        }
 
         // Theme switching functionality
         function switchTheme() {

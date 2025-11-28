@@ -74,13 +74,19 @@ Simply serve `index.html` from any web server. No dependencies or build process 
 
 ## Updating Data
 
-The incident data is embedded in the HTML file. To update:
+The incident data is embedded in `index.html`. To update with fresh data:
 
-1. Scrape fresh data from the source dashboard
-2. Convert to the JavaScript array format in `index.html`
-3. Update the "Last Updated" date
+```bash
+# Scrape fresh data from the source
+python scripts/scrape_dashboard.py --format js --output scripts/new_data.js
 
-A Python scraping script is available upon request.
+# Then copy the REAL_INCIDENT_DATA array into index.html
+# See scripts/UPDATE_WORKFLOW.md for detailed instructions
+```
+
+**Scripts included:**
+- `scripts/scrape_dashboard.py` — Python scraper (no dependencies)
+- `scripts/UPDATE_WORKFLOW.md` — Detailed update instructions
 
 ## Disclaimer
 
