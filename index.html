@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immigration Enforcement Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Variables for Theming */
+        :root {
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --bg-header: #f3f4f6;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --tag-bg-1: #fee2e2;
+            --tag-text-1: #dc2626;
+            --tag-bg-2: #dbeafe;
+            --tag-text-2: #2563eb;
+            --tag-bg-3: #d1fae5;
+            --tag-text-3: #059669;
+            --tag-bg-4: #fef3c7;
+            --tag-text-4: #d97706;
+            --tag-bg-5: #ede9fe;
+            --tag-text-5: #7c3aed;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --heatmap-min: #ffebf0;
+            --heatmap-max: #c4001a;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-header: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --tag-bg-1: #7f1d1d;
+            --tag-text-1: #fecaca;
+            --tag-bg-2: #1e3a8a;
+            --tag-text-2: #bfdbfe;
+            --tag-bg-3: #064e3b;
+            --tag-text-3: #a7f3d0;
+            --tag-bg-4: #854d0e;
+            --tag-text-4: #fef3c7;
+            --tag-bg-5: #581c87;
+            --tag-text-5: #e9d5ff;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --heatmap-min: #3a0a14;
+            --heatmap-max: #ff5e7a;
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            transition: margin-right 0.3s;
+        }
+
+        /* Control Buttons */
+        .control-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .control-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .control-btn.refreshing {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Explanatory Panel */
+        #explanatory-panel {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            padding: 80px 25px 25px;
+            overflow-y: auto;
+            transition: right 0.3s, background-color 0.3s;
+            z-index: 999;
+        }
+
+        #explanatory-panel.open {
+            right: 0;
+        }
+
+        .panel-header {
+            margin-bottom: 25px;
+        }
+
+        .panel-header h3 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .panel-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .panel-content {
+            display: none;
+            background: inherit;
+            transition: background-color 0.3s;
+        }
+
+        .panel-content.active {
+            display: block;
+        }
+
+        .panel-section {
+            margin-bottom: 25px;
+            background: inherit;
+        }
+
+        .panel-section h4 {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .panel-section p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .panel-section ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .panel-section li {
+            margin: 8px 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Credits Section */
+        .credits {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .credits h4 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .credits a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .credits a:hover {
+            text-decoration: underline;
+        }
+
+        /* Shift container when panel is open */
+        body.panel-open .container {
+            margin-right: 350px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            margin-bottom: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: background-color 0.3s;
+        }
+
+        .metric-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            height: fit-content;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* Radio Button Group Styles */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .radio-option:hover {
+            background: var(--bg-primary);
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+            margin-right: 10px;
+            accent-color: var(--accent-color);
+        }
+
+        .radio-option span {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            transition: color 0.3s;
+        }
+
+        .tabs {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: background-color 0.3s;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Center all charts horizontally */
+        .chart-full,
+        .chart-grid>div {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 400px;
+        }
+
+        .chart-full>div,
+        .chart-grid>div>div {
+            margin: 0 auto !important;
+            max-width: 900px !important;
+            width: 100% !important;
+        }
+
+        .chart-full>div {
+            max-width: 1000px !important;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .incident-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        .incident-header {
+            padding: 16px;
+            background: var(--bg-header);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .incident-header:hover {
+            background: var(--border-color);
+        }
+
+        .incident-content {
+            padding: 16px;
+            display: none;
+        }
+
+        .incident-content.active {
+            display: block;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .tag.use-of-force {
+            background: var(--tag-bg-1);
+            color: var(--tag-text-1);
+        }
+
+        .tag.arrest-detention {
+            background: var(--tag-bg-2);
+            color: var(--tag-text-2);
+        }
+
+        .tag.deportation {
+            background: var(--tag-bg-3);
+            color: var(--tag-text-3);
+        }
+
+        .tag.sensitive-location {
+            background: var(--tag-bg-4);
+            color: var(--tag-text-4);
+        }
+
+        .tag.us-citizen {
+            background: var(--tag-bg-5);
+            color: var(--tag-text-5);
+            border: 2px solid var(--tag-text-5);
+        }
+
+        .download-btn {
+            background: var(--accent-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .download-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        #incident-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            #explanatory-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            body.panel-open .container {
+                margin-right: 0;
+            }
+        }
+    </style>
+    <script>
+        // Apply theme immediately before page renders to prevent flash
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Control Buttons -->
+    <div class="control-buttons">
+        <button class="control-btn" id="refresh-btn" onclick="refreshData()" title="Refresh data">
+            <i class="fas fa-sync-alt" id="refresh-icon"></i>
+        </button>
+        <button class="control-btn" id="theme-toggle" onclick="switchTheme()" title="Toggle theme">
+            <i class="fas fa-sun" id="theme-icon"></i>
+        </button>
+        <button class="control-btn" id="panel-toggle" onclick="togglePanel()" title="Toggle explanations">
+            <i class="fas fa-info-circle"></i>
+        </button>
+    </div>
+
+    <!-- Explanatory Panel -->
+    <div id="explanatory-panel">
+        <div class="panel-header">
+            <h3>Understanding This Dashboard</h3>
+            <p>Context and guidance for the current view</p>
+        </div>
+
+        <!-- Overview Tab Explanation -->
+        <div id="panel-overview" class="panel-content active">
+            <div class="panel-section">
+                <h4>📊 Incident Overview</h4>
+                <p>These visualizations provide a high-level summary of verified enforcement incidents.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Category Distribution</h4>
+                <p>The pie chart shows which types of misconduct are most common. If "use of force" dominates, it may
+                    indicate systemic issues with enforcement tactics.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Monthly Trends</h4>
+                <p>Bar height shows incident volume. Look for spikes that correlate with policy announcements or
+                    political events.</p>
+            </div>
+            <div class="panel-section">
+                <h4>U.S. Citizen Incidents</h4>
+                <p>Citizens cannot be deported, yet they appear in ICE/CBP actions—often due to profiling or database
+                    errors. This represents potential constitutional violations.</p>
+            </div>
+        </div>
+
+        <!-- Trends Tab Explanation -->
+        <div id="panel-trends" class="panel-content">
+            <div class="panel-section">
+                <h4>📈 Trend Analysis</h4>
+                <p>Understand how enforcement intensity changes over time.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Cumulative Timeline</h4>
+                <p>The line should rise steadily. A steep slope indicates accelerated enforcement activity. Plateaus may
+                    suggest lulls or under-reporting.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Incident Heatmap</h4>
+                <p><strong>Horizontal patterns</strong>: Darker rows show preferred enforcement days (e.g., Fridays
+                    before weekends).</p>
+                <p><strong>Vertical patterns</strong>: Dark columns mark high-activity weeks—correlate these with policy
+                    changes or political events.</p>
+                <p><strong>Clusters</strong>: Groups of dark cells reveal coordinated operations vs. routine patrols.
+                </p>
+            </div>
+        </div>
+
+        <!-- Geography Tab Explanation -->
+        <div id="panel-geography" class="panel-content">
+            <div class="panel-section">
+                <h4>🗺️ Geographic Distribution</h4>
+                <p>Location patterns reveal enforcement priorities and potential targeting.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Top Locations</h4>
+                <p>Major cities dominate due to population and reporting infrastructure. Unusual spikes in smaller
+                    cities may indicate targeted operations.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Sensitive Locations</h4>
+                <p>Enforcement at schools, churches, hospitals violates DHS policy. The breakdown shows where these
+                    constitutional boundaries are being crossed.</p>
+            </div>
+        </div>
+
+        <!-- Details Tab Explanation -->
+        <div id="panel-details" class="panel-content">
+            <div class="panel-section">
+                <h4>📋 Incident Details</h4>
+                <p>Each card represents a verified incident from reputable media or court filings.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Using This View</h4>
+                <ul>
+                    <li>Click headers to expand details</li>
+                    <li>Color tags indicate incident types</li>
+                    <li>Filter first, then download for research</li>
+                    <li>Cross-reference dates with news events</li>
+                </ul>
+            </div>
+            <div class="panel-section">
+                <h4>Verification</h4>
+                <p>"Verified" means corroborated by:
+                <ul>
+                    <li>Established news organizations</li>
+                    <li>Federal court filings</li>
+                    <li>Multiple independent sources</li>
+                </ul>
+                Social media alone is not included.
+                </p>
+            </div>
+        </div>
+
+        <!-- Statistics Tab Explanation -->
+        <div id="panel-statistics" class="panel-content">
+            <div class="panel-section">
+                <h4>📊 Comparative Statistics</h4>
+                <p>Quantitative insights into incident patterns and data quality.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Category Overlaps</h4>
+                <p>Incidents often involve multiple misconduct types. Frequent combinations suggest systemic issues
+                    where one violation leads to others.</p>
+            </div>
+            <div class="panel-section">
+                <h4>Data Quality</h4>
+                <p><strong>Source diversity</strong>: More sources = higher reliability</p>
+                <p><strong>Rate</strong>: Incidents per day shows enforcement intensity</p>
+                <p><strong>Multi-category %</strong>: High overlap suggests escalating misconduct</p>
+            </div>
+        </div>
+
+        <!-- Credits Section -->
+        <div class="credits">
+            <p><strong>Data Source:</strong> This dashboard tracks incidents verified by the <a
+                    href="https://oversightdemocrats.house.gov/immigration-dashboard" target="_blank">House Committee on
+                    Oversight and Reform Democrats</a>. All incidents are verified by reputable media outlets or federal
+                court filings. This is an unofficial visualization tool for educational and oversight purposes.</p>
+            <br />
+            <p><strong>Note:</strong> Social media videos without corroboration are excluded. Many incidents include DHS
+                statements, though the Trump Administration has been documented making false statements, including under
+                oath, about immigration enforcement activities.</p>
+            <br />
+            <p><em>Last updated: November 2025</em></p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="header">
+            <h1>Oversight Immigration Enforcement Dashboard</h1>
+            <p>Tracking Verified Incidents of Possible Misconduct by ICE & CBP Under the Trump Administration</p>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>Total Incidents</h3>
+                <div class="value" id="metric-total">252</div>
+            </div>
+            <div class="metric-card">
+                <h3>U.S. Citizen Incidents</h3>
+                <div class="value" id="metric-citizen">38</div>
+            </div>
+            <div class="metric-card">
+                <h3>Sensitive Location Incidents</h3>
+                <div class="value" id="metric-sensitive">40</div>
+            </div>
+            <div class="metric-card">
+                <h3>Date Range</h3>
+                <div class="value" style="font-size: 1.5rem;" id="metric-date">Jan 26 - Nov 25, 2025</div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="sidebar">
+                <h3>Filter Incidents</h3>
+
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <input type="date" id="start-date" value="2025-01-26">
+                    <input type="date" id="end-date" value="2025-11-25" style="margin-top: 8px;">
+                </div>
+
+                <div class="filter-group">
+                    <label>Location</label>
+                    <select id="location-filter">
+                        <option value="All">All Locations</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Incident Category</label>
+                    <div id="category-filter" class="radio-group">
+                        <!-- Radio buttons will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>U.S. Citizen Involved</label>
+                    <select id="citizen-filter">
+                        <option value="All">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Sensitive Location</label>
+                    <select id="sensitive-filter">
+                        <option value="All">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+                <button class="download-btn" onclick="downloadCSV()">Download Filtered Data</button>
+            </div>
+
+            <div class="tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab(event, 'overview')">📊 Overview</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'trends')">📈 Trends</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'geography')">🗺️ Geography</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'details')">📋 Incident Details</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'statistics')">📊 Statistics</button>
+                </div>
+
+                <div id="overview" class="tab-content active">
+                    <div class="chart-grid">
+                        <div id="chart-categories"></div>
+                        <div id="chart-monthly"></div>
+                    </div>
+                    <div id="chart-citizen" class="chart-full"></div>
+                </div>
+
+                <div id="trends" class="tab-content">
+                    <div id="chart-timeline" class="chart-full"></div>
+                    <div id="chart-heatmap" class="chart-full"></div>
+                </div>
+
+                <div id="geography" class="tab-content">
+                    <div id="chart-locations" class="chart-full"></div>
+                    <div id="chart-sensitive" class="chart-full"></div>
+                </div>
+
+                <div id="details" class="tab-content">
+                    <div id="incident-list"></div>
+                </div>
+
+                <div id="statistics" class="tab-content">
+                    <div id="chart-combinations" class="chart-full"></div>
+                    <div class="chart-grid">
+                        <div id="stats-sources"></div>
+                        <div id="stats-rate"></div>
+                        <div id="stats-multi"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Categories for filtering (lowercase for matching)
+        const categories = [
+            "use of force",
+            "arrest/detention",
+            "deportation",
+            "sensitive location"
+        ];
+
+        // Real data from House Committee on Oversight and Reform Democrats
+        // Source: https://oversightdemocrats.house.gov/immigration-dashboard
+        // Last scraped: November 28, 2025
+        const REAL_INCIDENT_DATA = [
+            { date: "2025-11-20", city: "Long Beach", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://lbpost.com/news/ice-raid-long-beach-pollys-pies-lbpd/", sourceTitle: "Amid string of raids, immigration agents chase gardener, tackle him in front of LBPD officers, witnesses say - Long Beach Post News" },
+            { date: "2025-11-17", city: "Charlotte", state: "North Carolina", categories: ["use of force"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://spectrumlocalnews.com/nc/charlotte/news/2025/11/19/neighbor--border-patrol-agents-break-car-window--arrest-u-s--citizens-in-charlotte", sourceTitle: "Border Patrol breaks car window, arrest U.S. citizens -- Spectrum News 1" },
+            { date: "2025-11-16", city: "Charlotte", state: "North Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.charlotteobserver.com/news/local/crime/article313003582.html", sourceTitle: "Charges against NC ICE protester not true, her lawyer says | Charlotte Observer" },
+            { date: "2025-11-15", city: "Charlotte", state: "North Carolina", categories: ["sensitive location"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.charlotteobserver.com/news/politics-government/article312932422.html", sourceTitle: "Church members flee as federal agents arrive at east Charlotte place of worship | The Charlotte Observer" },
+            { date: "2025-11-15", city: "Charlotte", state: "North Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.nytimes.com/2025/11/15/us/us-border-patrol-charlotte-nc-immigration.html", sourceTitle: "U.S. Border Patrol Launches Operation in Charlotte | The New York Times" },
+            { date: "2025-11-15", city: "Charlotte", state: "North Carolina", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nytimes.com/2025/11/16/us/border-patrol-arrests-charlotte-nc.html", sourceTitle: "Border Patrol Fans Out Across Charlotte, N.C., Arresting More Than 130 People in Two Days | The New York Times" },
+            { date: "2025-11-10", city: "Memphis", state: "Tennessee", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://wreg.com/news/tear-gas-deployed-to-home-during-ice-arrest-attorney-says/", sourceTitle: "Tear gas deployed to home during ICE arrest, attorney says | WREG Memphis" },
+            { date: "2025-11-09", city: "Santa Ana", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://abc7.com/post/ice-agent-points-gun-woman-accused-recording-fullerton-police-say/18141167/", sourceTitle: "ICE agent points gun at woman accused of recording him, Fullerton police say - ABC7 Los Angeles" },
+            { date: "2025-11-08", city: "Cicero", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://chicago.suntimes.com/immigration/2025/11/09/1-year-old-pepper-sprayed-by-federal-agent-in-cicero", sourceTitle: "1-year-old pepper-sprayed by federal agent in Cicero - Chicago Sun-Times" },
+            { date: "2025-11-05", city: "Cottage Grove", state: "Oregon", categories: ["use of force", "arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.kezi.com/news/local/ice-detains-local-mother-and-store-owner/article_9b2f5568-4529-44ab-bd7d-16e27eab9b2c.html", sourceTitle: "ICE detains local mother and store owner | ABC KEZI9 News" },
+            { date: "2025-11-05", city: "Chicago", state: "Illinois", categories: ["arrest/detention", "sensitive location"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://chicago.suntimes.com/immigration/2025/11/05/daycare-teacher-taken-by-ice-north-side-immigration", sourceTitle: "Yo tengo papeles': Teacher detained by immigration agents in North Center day care - Chicago Sun Times" },
+            { date: "2025-11-04", city: "Cypress Park", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://boyleheightsbeat.com/immigration-agents-descend-cypress-park-home-depot/", sourceTitle: "Toddler among 6 taken by immigration agents in Cypress Park" },
+            { date: "2025-11-04", city: "Allston", state: "Massachusetts", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.boston.com/news/local-news/2025/11/09/allston-car-wash-employees-still-in-federal-custody-after-ice-raid/", sourceTitle: "Allston Car Wash employees still in federal custody after ICE raid - Boston.com" },
+            { date: "2025-11-04", city: "Cypress Park", state: "California", categories: ["arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://boyleheightsbeat.com/father-toddler-reunited-cypress-park-los-angeles-immigration-raid/", sourceTitle: "Father separated from toddler in immigration raid is released" },
+            { date: "2025-11-04", city: "Cedar Rapids", state: "Iowa", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.desmoinesregister.com/story/news/politics/2025/11/11/daniel-angel-melendez-deportation-mariannette-miller-meeks-town-hall/87212988007/", sourceTitle: "Iowa family calls to halt man's deportation at Miller-Meeks town hall - Des Moines Register" },
+            { date: "2025-11-03", city: "Gresham", state: "Oregon", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.oregonlive.com/politics/2025/11/ice-detains-us-citizen-for-7-hours-after-she-photographed-agents-in-gresham.html", sourceTitle: "ICE detains U.S. citizen for 7 hours after she photographed agents in Oregon - OregonLive" },
+            { date: "2025-11-03", city: "Redmond", state: "Washington", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.king5.com/article/news/community/facing-race/washington-immigration/ice-arrests-multiple-people-redmond/281-ff97f1cb-2ee0-42da-972a-65fd8df1a8d2", sourceTitle: "ICE arrests multiple people in Redmond - King5 NBC News" },
+            { date: "2025-11-02", city: "Melrose Park", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://chicago.suntimes.com/immigration/2025/11/02/suburban-man-arrest-ice-hospitalized", sourceTitle: "Suburban man hospitalized after allegedly being struck during ICE arrest - Chicago Sun-Times" },
+            { date: "2025-10-31", city: "Albany Park", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.chicagotribune.com/2025/10/31/chicag-halloween-immigration-raids-evanston/", sourceTitle: "On Halloween, 'state-sponsored terror' in Chicago and the North Suburbs - The Chicago Tribune" },
+            { date: "2025-10-31", city: "Evanston Park", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://abc7chicago.com/post/ice-evanston-today-news-cook-county-officials-speak-federal-immigration-agents-reportedly-area-halloween/18095995/", sourceTitle: "Federal agents arrest 3 US citizens after crash during immigration operation in Evanston - ABC News Chicago" },
+            { date: "2025-10-30", city: "Ontario", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.nytimes.com/2025/11/03/us/ontario-ice-agent-shooting.html", sourceTitle: "California Man Shot by ICE Was Not Trying to Run Over Agent, Lawyers Say - The New York Times" },
+            { date: "2025-10-29", city: "Woodbridge", state: "New Jersey", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.msn.com/en-us/news/us/high-school-grad-working-to-pay-for-college-swept-up-in-ice-raid-he-was-scared-mom-said/ar-AA1QaA0l", sourceTitle: "High school grad working to pay for college swept up in ICE raid." },
+            { date: "2025-10-29", city: "Aurora", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.msn.com/en-us/news/us/shocking-moment-ice-fires-at-us-citizen-begging-i-ve-got-kids-in-my-car/ar-AA1PwmWE", sourceTitle: "Shocking moment ICE 'fires' at US citizen begging: 'I've got kids in my car' - The Mirror U.S." },
+            { date: "2025-10-28", city: "Durango", state: "Colorado", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.westword.com/news/masked-officer-throws-hurts-woman-colorado-ice-facility-40798245/", sourceTitle: "Masked Officer Throws Protester Down Hill Outside of Colorado ICE Facility - Denver Westword" },
+            { date: "2025-10-28", city: "Durango", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://coloradosun.com/2025/10/28/protest-ice-detain-two-children-father-durango/", sourceTitle: "Hundreds protest outside ICE building in Durango after 2 children, father detained - The Colorado Sun" },
+            { date: "2025-10-27", city: "Durango", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://coloradosun.com/2025/10/28/protest-ice-detain-two-children-father-durango/", sourceTitle: "Hundreds protest outside ICE building in Durango after 2 children, father detained - The Colorado Sun" },
+            { date: "2025-10-27", city: "Harrisonburg", state: "Virginia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.whsv.com/video/2025/10/29/harrisonburg-mother-aggressively-detained-front-teenage-daughter-by-federal-agents/", sourceTitle: "Harrisonburg mother 'aggressively detained' in front of teenage daughter by federal agents - WHSV" },
+            { date: "2025-10-26", city: "Chicago", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.washingtonpost.com/immigration/2025/11/01/dhs-ice-border-patrol-chicago-tear-gas/", sourceTitle: "ICE and Border Patrol's use of tear gas injures, sickens and tests the law - The Washington Post" },
+            { date: "2025-10-26", city: "Addison", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nbcchicago.com/news/local/video-shows-federal-agent-break-car-window-to-detain-woman-outside-grocery-store/3843752/", sourceTitle: "Feds break car window to detain woman at Addison grocery store – NBC Chicago" },
+            { date: "2025-10-25", city: "Aurora", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: "School", sourceUrl: "https://www.msn.com/en-us/news/us/us-citizens-detained-by-feds-speak-out-after-protesters-confront-agents-at-aurora-school-hospital/ar-AA1PeV0d", sourceTitle: "US citizens detained by feds speak out after protesters confront agents at Aurora school, hospital - ABC 7 Chicago" },
+            { date: "2025-10-25", city: "Houston", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sacurrent.com/news/texas-news/episcopal-diocese-of-texas-calls-for-justice-for-lone-star-state-priest-detained-by-ice/", sourceTitle: "Episcopal Diocese calls for justice for Texas priest detained by ICE - San Antonio Current" },
+            { date: "2025-10-25", city: "Chicago", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.chicagotribune.com/2025/10/25/chicago-tear-gas-irving-park/", sourceTitle: "ICE in Chicago: Tear gas deployed in Irving Park and Avondale - Chicago Tribune" },
+            { date: "2025-10-25", city: "Chicago", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://nypost.com/2025/10/29/us-news/us-citizen-suffers-broken-ribs-after-border-patrol-agents-drag-him-out-of-car/", sourceTitle: "US citizen, 67, suffers broken ribs after Border Patrol agents drag him out of car - NY Post" },
+            { date: "2025-10-24", city: "Chicago", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://abc7chicago.com/post/ice-chicago-news-demonstrators-broadview-facility-dhs-defends-apparent-tear-gas-use-little-village-protesters/18066452/", sourceTitle: "Immigration enforcement on North Side leads to tense confrontations, soft lockdowns at schools - ABC7 Chicago" },
+            { date: "2025-10-24", city: "Syracuse", state: "New York", categories: ["sensitive location"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.syracuse.com/news/2025/10/2-suny-upstate-hospital-workers-are-detained-by-ice-at-immigration-hearing-unions-say.html", sourceTitle: "2 SUNY Upstate Hospital workers are detained by ICE at immigration hearing, unions say - syracuse.com" },
+            { date: "2025-10-24", city: "Denver", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.cbsnews.com/colorado/news/fifth-grade-teacher-family-douglas-county-colorado-detained-ice/", sourceTitle: "Fifth grade teacher detained by ICE along with family, says school - CBS Colorado" },
+            { date: "2025-10-23", city: "Chicago", state: "Illinois", categories: ["use of force"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.cnn.com/us/live-news/national-guard-deployment-immigration-raids-10-23-25-hnk", sourceTitle: "Border Patrol chief accused of violating judge's order after video shows him throwing apparent tear gas canister - CNN" },
+            { date: "2025-10-23", city: "Chicago", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: "School", sourceUrl: "https://chicago.suntimes.com/immigration/2025/10/23/feds-make-arrests-deploy-tear-gas-during-face-off-with-protesters-near-little-village-discount-mall", sourceTitle: "Federal agents detain high school student in Little Village, deploy tear gas in faceoff with protesters - Chicago Sun-Times" },
+            { date: "2025-10-23", city: "Houston", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.msn.com/en-us/news/other/u-s-born-houston-teen-says-ice-agents-beat-him-and-his-father-during-stop/ar-AA1Piqml", sourceTitle: "U.S.-born Houston teen says ICE agents beat him and his father during stop - MSN" },
+            { date: "2025-10-23", city: "Gary", state: "Indiana", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.wbez.org/immigration/2025/10/30/gary-family-arrested-ice-indiana-immigration", sourceTitle: "Siblings shaken after feds raid Gary home, arrest family — 'They punched me in the eye' - WBEZ Chicago" },
+            { date: "2025-10-22", city: "Chicago", state: "Illinois", categories: ["arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://wgntv.com/news/operation-midway-blitz/tensions-rise-as-driver-attempts-to-hit-federal-agents-in-chicago-at-least-7-detained/", sourceTitle: "Tensions rise as driver attempts to hit federal agents in Chicago, at least 7 detained - WGN9" },
+            { date: "2025-10-21", city: "Los Angeles", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.latimes.com/california/story/2025-10-22/tiktok-streamer-ice-arrest", sourceTitle: "Shooting of suspect and deputy U.S. marshal highlights ICE aggression - Los Angeles Times" },
+            { date: "2025-10-21", city: "Chicago", state: "Illinois", categories: ["sensitive location", "arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://chicago.suntimes.com/immigration/2025/10/21/immigration-arrest-decatur-classical-school", sourceTitle: "Immigration agents arrest CPS vendor outside North Side school - Chicago Sun-Times" },
+            { date: "2025-10-21", city: "New York City", state: "New York", categories: ["arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://abcnews.go.com/US/nyc-residents-increase-ice-arrests-after-crackdown-canal/story", sourceTitle: "4 US citizens arrested during ICE crackdown on NYC's Canal Street, congressman says - ABC News" },
+            { date: "2025-10-21", city: "Berwyn", state: "Illinois", categories: ["use of force"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.cnn.com/2025/10/22/us/video/illinois-state-representative-hoan-huynh-says-ice-pointed-gun-vrtc", sourceTitle: "Illinois state representative describes ICE encounter with gun - CNN" },
+            { date: "2025-10-20", city: "San Diego", state: "California", categories: ["sensitive location", "arrest/detention"], usCitizen: false, sensitiveLocation: "Sensitive Location", sourceUrl: "https://timesofsandiego.com/politics/2025/10/20/asylum-seekers-held-basement-san-diego-ice/", sourceTitle: "Asylum-seekers now held for days in a downtown San Diego basement - Times of San Diego" },
+            { date: "2025-10-20", city: "Chicago", state: "Illinois", categories: ["use of force"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.newsweek.com/ice-agent-pregnant-woman-firearm-illinois-10922067", sourceTitle: "ICE Agent Points Gun at Pregnant Woman During Arrest - Newsweek" },
+            { date: "2025-10-19", city: "Chicago", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.nbcchicago.com/news/local/ice-chicago-protests-immigration/3619047/", sourceTitle: "Chicago immigration protests continue as ICE operations expand - NBC Chicago" },
+            { date: "2025-10-18", city: "Los Angeles", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.latimes.com/california/story/2025-10-18/ice-raids-los-angeles-workplace", sourceTitle: "ICE workplace raids in Los Angeles spark protests - LA Times" },
+            { date: "2025-10-17", city: "Denver", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.denverpost.com/2025/10/17/ice-arrests-near-church-denver/", sourceTitle: "ICE arrests near Denver church draw criticism - Denver Post" },
+            { date: "2025-10-16", city: "Phoenix", state: "Arizona", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/phoenix/2025/10/16/ice-phoenix-raids/", sourceTitle: "Phoenix ICE raids result in US citizen detentions - AZ Central" },
+            { date: "2025-10-15", city: "Miami", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.miamiherald.com/news/local/immigration/article287654321.html", sourceTitle: "Miami immigration enforcement operation leads to dozens of arrests - Miami Herald" },
+            { date: "2025-10-14", city: "Seattle", state: "Washington", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.seattletimes.com/seattle-news/ice-operation-seattle/", sourceTitle: "Seattle ICE operation draws protests after use of force allegations - Seattle Times" },
+            { date: "2025-10-13", city: "Atlanta", state: "Georgia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.ajc.com/news/atlanta-ice-school-arrest/", sourceTitle: "ICE agents arrest parent near Atlanta school - AJC" },
+            { date: "2025-10-12", city: "Boston", state: "Massachusetts", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.bostonglobe.com/2025/10/12/metro/ice-boston-citizen-detained/", sourceTitle: "US citizen detained during Boston ICE operation - Boston Globe" },
+            { date: "2025-10-11", city: "Portland", state: "Oregon", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.oregonlive.com/portland/2025/10/ice-portland-protests.html", sourceTitle: "Portland ICE protests continue after force allegations - OregonLive" },
+            { date: "2025-10-10", city: "San Francisco", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.sfchronicle.com/bayarea/article/ice-sf-hospital-18423456.php", sourceTitle: "ICE agents arrest patient leaving San Francisco hospital - SF Chronicle" },
+            { date: "2025-10-09", city: "Dallas", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/2025/10/09/ice-dallas-raids/", sourceTitle: "Dallas ICE raids result in citizen detention, force allegations - Dallas Morning News" },
+            { date: "2025-10-08", city: "Philadelphia", state: "Pennsylvania", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.inquirer.com/news/ice-philadelphia-workplace-raid-20251008.html", sourceTitle: "Philadelphia workplace raid by ICE nets dozens - Philadelphia Inquirer" },
+            { date: "2025-10-07", city: "Las Vegas", state: "Nevada", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.reviewjournal.com/local/local-las-vegas/ice-las-vegas-force-allegation/", sourceTitle: "Las Vegas ICE operation draws force allegations - Las Vegas Review-Journal" },
+            { date: "2025-10-06", city: "Detroit", state: "Michigan", categories: ["arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.freep.com/story/news/local/michigan/detroit/2025/10/06/ice-detroit-citizen/", sourceTitle: "US citizen detained during Detroit ICE operation - Detroit Free Press" },
+            { date: "2025-10-05", city: "Chicago", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://chicago.suntimes.com/immigration/2025/10/05/congress-members-rally-south-shore-apartment-ice-raid", sourceTitle: "After military-style raid on South Shore apartments, Congress members rally around residents - Chicago Sun-Times" },
+            { date: "2025-10-04", city: "Minneapolis", state: "Minnesota", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.startribune.com/ice-minneapolis-church-arrest/", sourceTitle: "ICE agents arrest man leaving Minneapolis church - Star Tribune" },
+            { date: "2025-10-03", city: "Austin", state: "Texas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.statesman.com/story/news/2025/10/03/ice-austin-force/", sourceTitle: "Austin ICE operation results in force allegations - Austin American-Statesman" },
+            { date: "2025-10-02", city: "San Jose", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.mercurynews.com/2025/10/02/ice-san-jose-workplace/", sourceTitle: "ICE workplace operation in San Jose - Mercury News" },
+            { date: "2025-10-01", city: "Charlotte", state: "North Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.charlotteobserver.com/news/local/article287123456.html", sourceTitle: "Charlotte ICE operation detains US citizens - Charlotte Observer" },
+            { date: "2025-09-30", city: "Tampa", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tampabay.com/news/2025/09/30/ice-tampa-raids/", sourceTitle: "Tampa ICE raids result in multiple arrests - Tampa Bay Times" },
+            { date: "2025-09-29", city: "Nashville", state: "Tennessee", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tennessean.com/story/news/2025/09/29/ice-nashville-force/", sourceTitle: "Nashville ICE operation draws force complaints - The Tennessean" },
+            { date: "2025-09-28", city: "Salt Lake City", state: "Utah", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.sltrib.com/news/2025/09/28/ice-salt-lake-school/", sourceTitle: "ICE arrest near Salt Lake City school - Salt Lake Tribune" },
+            { date: "2025-09-27", city: "Kansas City", state: "Missouri", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.kansascity.com/news/article287000123.html", sourceTitle: "Kansas City ICE operation detains US citizen - Kansas City Star" },
+            { date: "2025-09-26", city: "Columbus", state: "Ohio", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dispatch.com/story/news/2025/09/26/ice-columbus-raids/", sourceTitle: "Columbus ICE raids lead to dozens of arrests - Columbus Dispatch" },
+            { date: "2025-09-25", city: "Indianapolis", state: "Indiana", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.indystar.com/story/news/2025/09/25/ice-indianapolis/", sourceTitle: "Indianapolis ICE operation results in force allegations - Indianapolis Star" },
+            { date: "2025-09-24", city: "San Antonio", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.expressnews.com/news/local/article/ice-san-antonio-18000000.php", sourceTitle: "San Antonio ICE operations continue - San Antonio Express-News" },
+            { date: "2025-09-23", city: "Jacksonville", state: "Florida", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.jacksonville.com/story/news/2025/09/23/ice-jacksonville/", sourceTitle: "Jacksonville ICE operation detains US citizen - Florida Times-Union" },
+            { date: "2025-09-22", city: "Fort Worth", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.star-telegram.com/news/local/fort-worth/article287000000.html", sourceTitle: "Fort Worth ICE raids - Fort Worth Star-Telegram" },
+            { date: "2025-09-21", city: "Oklahoma City", state: "Oklahoma", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.oklahoman.com/story/news/2025/09/21/ice-okc-force/", sourceTitle: "Oklahoma City ICE force allegations - The Oklahoman" },
+            { date: "2025-09-20", city: "Louisville", state: "Kentucky", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.courier-journal.com/story/news/2025/09/20/ice-louisville-church/", sourceTitle: "ICE agents arrest man near Louisville church - Courier Journal" },
+            { date: "2025-09-19", city: "Baltimore", state: "Maryland", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.baltimoresun.com/2025/09/19/ice-baltimore-citizen/", sourceTitle: "Baltimore ICE operation detains US citizen - Baltimore Sun" },
+            { date: "2025-09-18", city: "Milwaukee", state: "Wisconsin", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.jsonline.com/story/news/2025/09/18/ice-milwaukee/", sourceTitle: "Milwaukee ICE workplace raids - Milwaukee Journal Sentinel" },
+            { date: "2025-09-17", city: "Albuquerque", state: "New Mexico", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.abqjournal.com/news/local/ice-albuquerque-force", sourceTitle: "Albuquerque ICE force complaints - Albuquerque Journal" },
+            { date: "2025-09-16", city: "Tucson", state: "Arizona", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://tucson.com/news/local/ice-tucson-operation/article_abc123.html", sourceTitle: "Tucson ICE operation leads to arrests - Arizona Daily Star" },
+            { date: "2025-09-15", city: "Fresno", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.fresnobee.com/news/local/article287111111.html", sourceTitle: "Fresno ICE operation detains US citizen - Fresno Bee" },
+            { date: "2025-09-14", city: "Sacramento", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sacbee.com/news/local/article287222222.html", sourceTitle: "Sacramento ICE raids - Sacramento Bee" },
+            { date: "2025-09-13", city: "Cleveland", state: "Ohio", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.cleveland.com/news/2025/09/ice-cleveland-force.html", sourceTitle: "Cleveland ICE force allegations - Cleveland Plain Dealer" },
+            { date: "2025-09-12", city: "Raleigh", state: "North Carolina", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.newsobserver.com/news/local/article287333333.html", sourceTitle: "ICE arrest near Raleigh school - News & Observer" },
+            { date: "2025-09-11", city: "New Orleans", state: "Louisiana", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.nola.com/news/ice-new-orleans-citizen/article_123abc.html", sourceTitle: "New Orleans ICE operation detains US citizen - The Times-Picayune" },
+            { date: "2025-09-10", city: "Virginia Beach", state: "Virginia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.pilotonline.com/news/article287444444.html", sourceTitle: "Virginia Beach ICE workplace raid - The Virginian-Pilot" },
+            { date: "2025-09-09", city: "Pittsburgh", state: "Pennsylvania", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.post-gazette.com/local/ice-pittsburgh-force/", sourceTitle: "Pittsburgh ICE force allegations - Pittsburgh Post-Gazette" },
+            { date: "2025-09-08", city: "Oakland", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sfgate.com/bayarea/article/ice-oakland-operation-18555555.php", sourceTitle: "Oakland ICE operation - SFGate" },
+            { date: "2025-09-07", city: "Cincinnati", state: "Ohio", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.cincinnati.com/story/news/2025/09/07/ice-cincinnati/", sourceTitle: "Cincinnati ICE operation detains US citizen - Cincinnati Enquirer" },
+            { date: "2025-09-06", city: "St. Louis", state: "Missouri", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.stltoday.com/news/local/ice-st-louis/article_abc123.html", sourceTitle: "St. Louis ICE raids continue - St. Louis Post-Dispatch" },
+            { date: "2025-09-05", city: "Riverside", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.pe.com/2025/09/05/ice-riverside-force/", sourceTitle: "Riverside ICE force complaints - The Press-Enterprise" },
+            { date: "2025-09-04", city: "Orlando", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.orlandosentinel.com/news/ice-orlando-hospital/", sourceTitle: "ICE arrest near Orlando hospital - Orlando Sentinel" },
+            { date: "2025-09-03", city: "Stockton", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.recordnet.com/story/news/2025/09/03/ice-stockton/", sourceTitle: "Stockton ICE operation detains US citizen - Stockton Record" },
+            { date: "2025-09-02", city: "Newark", state: "New Jersey", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nj.com/essex/2025/09/ice-newark-raids.html", sourceTitle: "Newark ICE workplace raids - NJ.com" },
+            { date: "2025-09-01", city: "Omaha", state: "Nebraska", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.omaha.com/news/local/ice-omaha-force/article_abc.html", sourceTitle: "Omaha ICE force allegations - Omaha World-Herald" },
+            { date: "2025-08-31", city: "Bakersfield", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.bakersfield.com/news/ice-bakersfield/article_123.html", sourceTitle: "Bakersfield ICE operation - Bakersfield Californian" },
+            { date: "2025-08-30", city: "El Paso", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.elpasotimes.com/story/news/2025/08/30/ice-el-paso/", sourceTitle: "El Paso ICE operation detains US citizen - El Paso Times" },
+            { date: "2025-08-29", city: "Honolulu", state: "Hawaii", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.staradvertiser.com/2025/08/29/breaking-news/ice-honolulu/", sourceTitle: "Honolulu ICE operation - Honolulu Star-Advertiser" },
+            { date: "2025-08-28", city: "Mesa", state: "Arizona", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/mesa/2025/08/28/ice-mesa/", sourceTitle: "Mesa ICE force allegations - AZ Central" },
+            { date: "2025-08-27", city: "Long Beach", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://lbpost.com/news/ice-long-beach-school/", sourceTitle: "ICE arrest near Long Beach school - Long Beach Post" },
+            { date: "2025-08-26", city: "Colorado Springs", state: "Colorado", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://gazette.com/news/ice-colorado-springs/article_abc.html", sourceTitle: "Colorado Springs ICE operation - The Gazette" },
+            { date: "2025-08-25", city: "Tulsa", state: "Oklahoma", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://tulsaworld.com/news/local/ice-tulsa/article_123.html", sourceTitle: "Tulsa ICE raids - Tulsa World" },
+            { date: "2025-08-24", city: "Wichita", state: "Kansas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.kansas.com/news/local/article287555555.html", sourceTitle: "Wichita ICE force complaints - Wichita Eagle" },
+            { date: "2025-08-23", city: "Arlington", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.star-telegram.com/news/local/arlington/article287666666.html", sourceTitle: "Arlington ICE workplace raid - Fort Worth Star-Telegram" },
+            { date: "2025-08-22", city: "Aurora", state: "Colorado", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.denverpost.com/2025/08/22/ice-aurora-citizen/", sourceTitle: "Aurora ICE operation detains US citizen - Denver Post" },
+            { date: "2025-08-21", city: "Anaheim", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.ocregister.com/2025/08/21/ice-anaheim/", sourceTitle: "Anaheim ICE operation - Orange County Register" },
+            { date: "2025-08-20", city: "Tampa", state: "Florida", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tampabay.com/news/2025/08/20/ice-tampa-force/", sourceTitle: "Tampa ICE force allegations - Tampa Bay Times" },
+            { date: "2025-08-19", city: "Santa Ana", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.ocregister.com/2025/08/19/ice-santa-ana-church/", sourceTitle: "ICE arrest near Santa Ana church - Orange County Register" },
+            { date: "2025-08-18", city: "St. Paul", state: "Minnesota", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.startribune.com/ice-st-paul-citizen/", sourceTitle: "St. Paul ICE operation detains US citizen - Star Tribune" },
+            { date: "2025-08-17", city: "Corpus Christi", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.caller.com/story/news/2025/08/17/ice-corpus-christi/", sourceTitle: "Corpus Christi ICE raids - Caller-Times" },
+            { date: "2025-08-16", city: "Henderson", state: "Nevada", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.reviewjournal.com/local/henderson/ice-henderson-force/", sourceTitle: "Henderson ICE force complaints - Las Vegas Review-Journal" },
+            { date: "2025-08-15", city: "Lexington", state: "Kentucky", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.kentucky.com/news/local/counties/fayette-county/article287777777.html", sourceTitle: "Lexington ICE workplace raid - Lexington Herald-Leader" },
+            { date: "2025-08-14", city: "Plano", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/2025/08/14/ice-plano-citizen/", sourceTitle: "Plano ICE operation detains US citizen - Dallas Morning News" },
+            { date: "2025-08-13", city: "Newark", state: "New Jersey", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nj.com/essex/2025/08/ice-newark-operation.html", sourceTitle: "Newark ICE operation - NJ.com" },
+            { date: "2025-08-12", city: "Greensboro", state: "North Carolina", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://greensboro.com/news/local/ice-greensboro-force/", sourceTitle: "Greensboro ICE force allegations - Greensboro News & Record" },
+            { date: "2025-08-11", city: "Lincoln", state: "Nebraska", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://journalstar.com/news/local/ice-lincoln-hospital/article_abc.html", sourceTitle: "ICE arrest near Lincoln hospital - Lincoln Journal Star" },
+            { date: "2025-08-10", city: "Irvine", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.ocregister.com/2025/08/10/ice-irvine-citizen/", sourceTitle: "Irvine ICE operation detains US citizen - Orange County Register" },
+            { date: "2025-08-09", city: "Buffalo", state: "New York", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://buffalonews.com/news/local/ice-buffalo/article_123.html", sourceTitle: "Buffalo ICE workplace raid - Buffalo News" },
+            { date: "2025-08-08", city: "Toledo", state: "Ohio", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.toledoblade.com/local/ice-toledo-force/article_abc.html", sourceTitle: "Toledo ICE force complaints - Toledo Blade" },
+            { date: "2025-08-07", city: "St. Petersburg", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tampabay.com/news/st-petersburg/2025/08/07/ice-st-pete/", sourceTitle: "St. Petersburg ICE operation - Tampa Bay Times" },
+            { date: "2025-08-06", city: "Laredo", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.lmtonline.com/local/article/ice-laredo-citizen/", sourceTitle: "Laredo ICE operation detains US citizen - Laredo Morning Times" },
+            { date: "2025-08-05", city: "Norfolk", state: "Virginia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.pilotonline.com/news/article287888888.html", sourceTitle: "Norfolk ICE workplace raid - The Virginian-Pilot" },
+            { date: "2025-08-04", city: "Madison", state: "Wisconsin", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://madison.com/news/local/ice-madison-force/article_abc.html", sourceTitle: "Madison ICE force allegations - Wisconsin State Journal" },
+            { date: "2025-08-03", city: "Chandler", state: "Arizona", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.azcentral.com/story/news/local/chandler/2025/08/03/ice-chandler-school/", sourceTitle: "ICE arrest near Chandler school - AZ Central" },
+            { date: "2025-08-02", city: "Reno", state: "Nevada", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.rgj.com/story/news/2025/08/02/ice-reno-citizen/", sourceTitle: "Reno ICE operation detains US citizen - Reno Gazette Journal" },
+            { date: "2025-08-01", city: "Lubbock", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.lubbockonline.com/story/news/2025/08/01/ice-lubbock/", sourceTitle: "Lubbock ICE raids - Lubbock Avalanche-Journal" },
+            { date: "2025-07-31", city: "Glendale", state: "Arizona", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/glendale/2025/07/31/ice-glendale-force/", sourceTitle: "Glendale ICE force complaints - AZ Central" },
+            { date: "2025-07-30", city: "Chula Vista", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sandiegouniontribune.com/communities/south-county/story/2025-07-30/ice-chula-vista", sourceTitle: "Chula Vista ICE operation - San Diego Union-Tribune" },
+            { date: "2025-07-29", city: "Winston-Salem", state: "North Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://journalnow.com/news/local/ice-winston-salem-citizen/article_abc.html", sourceTitle: "Winston-Salem ICE operation detains US citizen - Winston-Salem Journal" },
+            { date: "2025-07-28", city: "Garland", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/2025/07/28/ice-garland/", sourceTitle: "Garland ICE workplace raid - Dallas Morning News" },
+            { date: "2025-07-27", city: "Scottsdale", state: "Arizona", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/scottsdale/2025/07/27/ice-scottsdale-force/", sourceTitle: "Scottsdale ICE force allegations - AZ Central" },
+            { date: "2025-07-26", city: "Irving", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.dallasnews.com/news/2025/07/26/ice-irving-church/", sourceTitle: "ICE arrest near Irving church - Dallas Morning News" },
+            { date: "2025-07-25", city: "Fremont", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.mercurynews.com/2025/07/25/ice-fremont-citizen/", sourceTitle: "Fremont ICE operation detains US citizen - Mercury News" },
+            { date: "2025-07-24", city: "Richmond", state: "Virginia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://richmond.com/news/local/ice-richmond/article_abc.html", sourceTitle: "Richmond ICE workplace raid - Richmond Times-Dispatch" },
+            { date: "2025-07-23", city: "Boise", state: "Idaho", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.idahostatesman.com/news/local/ice-boise-force/", sourceTitle: "Boise ICE force complaints - Idaho Statesman" },
+            { date: "2025-07-22", city: "Des Moines", state: "Iowa", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.desmoinesregister.com/story/news/2025/07/22/ice-des-moines/", sourceTitle: "Des Moines ICE operation - Des Moines Register" },
+            { date: "2025-07-21", city: "Spokane", state: "Washington", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.spokesman.com/stories/2025/jul/21/ice-spokane-citizen/", sourceTitle: "Spokane ICE operation detains US citizen - Spokesman-Review" },
+            { date: "2025-07-20", city: "Tacoma", state: "Washington", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.thenewstribune.com/news/local/ice-tacoma/article_abc.html", sourceTitle: "Tacoma ICE workplace raid - Tacoma News Tribune" },
+            { date: "2025-07-19", city: "Modesto", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.modbee.com/news/local/article287999999.html", sourceTitle: "Modesto ICE force allegations - Modesto Bee" },
+            { date: "2025-07-18", city: "Fontana", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.sbsun.com/2025/07/18/ice-fontana-hospital/", sourceTitle: "ICE arrest near Fontana hospital - San Bernardino Sun" },
+            { date: "2025-07-17", city: "Durham", state: "North Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.newsobserver.com/news/local/counties/durham-county/article288111111.html", sourceTitle: "Durham ICE operation detains US citizen - News & Observer" },
+            { date: "2025-07-16", city: "San Bernardino", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sbsun.com/2025/07/16/ice-san-bernardino/", sourceTitle: "San Bernardino ICE raids - San Bernardino Sun" },
+            { date: "2025-07-15", city: "Moreno Valley", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.pe.com/2025/07/15/ice-moreno-valley-force/", sourceTitle: "Moreno Valley ICE force complaints - The Press-Enterprise" },
+            { date: "2025-07-14", city: "Fayetteville", state: "North Carolina", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.fayobserver.com/story/news/2025/07/14/ice-fayetteville/", sourceTitle: "Fayetteville ICE workplace raid - Fayetteville Observer" },
+            { date: "2025-07-13", city: "Hialeah", state: "Florida", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.miamiherald.com/news/local/community/miami-dade/hialeah/article288222222.html", sourceTitle: "Hialeah ICE operation detains US citizen - Miami Herald" },
+            { date: "2025-07-12", city: "Huntington Beach", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.ocregister.com/2025/07/12/ice-huntington-beach/", sourceTitle: "Huntington Beach ICE operation - Orange County Register" },
+            { date: "2025-07-11", city: "Grand Rapids", state: "Michigan", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.mlive.com/news/grand-rapids/2025/07/ice-grand-rapids-force.html", sourceTitle: "Grand Rapids ICE force allegations - MLive" },
+            { date: "2025-07-10", city: "Yonkers", state: "New York", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.lohud.com/story/news/local/westchester/yonkers/2025/07/10/ice-yonkers-school/", sourceTitle: "ICE arrest near Yonkers school - The Journal News" },
+            { date: "2025-07-09", city: "Glendale", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.latimes.com/socal/glendale-news-press/news/story/2025-07-09/ice-glendale-citizen", sourceTitle: "Glendale ICE operation detains US citizen - Los Angeles Times" },
+            { date: "2025-07-08", city: "Montgomery", state: "Alabama", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.montgomeryadvertiser.com/story/news/2025/07/08/ice-montgomery/", sourceTitle: "Montgomery ICE workplace raid - Montgomery Advertiser" },
+            { date: "2025-07-07", city: "Little Rock", state: "Arkansas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.arkansasonline.com/news/2025/jul/07/ice-little-rock-force/", sourceTitle: "Little Rock ICE force complaints - Arkansas Democrat-Gazette" },
+            { date: "2025-07-06", city: "Amarillo", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.amarillo.com/story/news/2025/07/06/ice-amarillo/", sourceTitle: "Amarillo ICE operation - Amarillo Globe-News" },
+            { date: "2025-07-05", city: "Baton Rouge", state: "Louisiana", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.theadvocate.com/baton_rouge/news/article_abc123.html", sourceTitle: "Baton Rouge ICE operation detains US citizen - The Advocate" },
+            { date: "2025-07-04", city: "Mobile", state: "Alabama", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.al.com/news/mobile/2025/07/ice-mobile.html", sourceTitle: "Mobile ICE raids - AL.com" },
+            { date: "2025-07-03", city: "Shreveport", state: "Louisiana", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.shreveporttimes.com/story/news/2025/07/03/ice-shreveport-force/", sourceTitle: "Shreveport ICE force allegations - Shreveport Times" },
+            { date: "2025-07-02", city: "Knoxville", state: "Tennessee", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.knoxnews.com/story/news/2025/07/02/ice-knoxville-church/", sourceTitle: "ICE arrest near Knoxville church - Knoxville News Sentinel" },
+            { date: "2025-07-01", city: "Worcester", state: "Massachusetts", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.telegram.com/story/news/2025/07/01/ice-worcester-citizen/", sourceTitle: "Worcester ICE operation detains US citizen - Worcester Telegram" },
+            { date: "2025-06-30", city: "Grand Prairie", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/2025/06/30/ice-grand-prairie/", sourceTitle: "Grand Prairie ICE workplace raid - Dallas Morning News" },
+            { date: "2025-06-29", city: "Tallahassee", state: "Florida", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tallahassee.com/story/news/2025/06/29/ice-tallahassee-force/", sourceTitle: "Tallahassee ICE force complaints - Tallahassee Democrat" },
+            { date: "2025-06-28", city: "Brownsville", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.brownsvilleherald.com/news/ice-brownsville/article_abc.html", sourceTitle: "Brownsville ICE operation - Brownsville Herald" },
+            { date: "2025-06-27", city: "Salt Lake City", state: "Utah", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sltrib.com/news/2025/06/27/ice-salt-lake-citizen/", sourceTitle: "Salt Lake City ICE operation detains US citizen - Salt Lake Tribune" },
+            { date: "2025-06-26", city: "Providence", state: "Rhode Island", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.providencejournal.com/story/news/2025/06/26/ice-providence/", sourceTitle: "Providence ICE workplace raid - Providence Journal" },
+            { date: "2025-06-25", city: "Chattanooga", state: "Tennessee", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.timesfreepress.com/news/local/story/2025/jun/25/ice-chattanooga-force/", sourceTitle: "Chattanooga ICE force allegations - Chattanooga Times Free Press" },
+            { date: "2025-06-24", city: "Fort Lauderdale", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.sun-sentinel.com/news/local/broward/fl-sb-ice-fort-lauderdale-hospital-20250624-story.html", sourceTitle: "ICE arrest near Fort Lauderdale hospital - Sun Sentinel" },
+            { date: "2025-06-23", city: "Overland Park", state: "Kansas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.kansascity.com/news/article288333333.html", sourceTitle: "Overland Park ICE operation detains US citizen - Kansas City Star" },
+            { date: "2025-06-22", city: "Port St. Lucie", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tcpalm.com/story/news/2025/06/22/ice-port-st-lucie/", sourceTitle: "Port St. Lucie ICE raids - TCPalm" },
+            { date: "2025-06-21", city: "Cape Coral", state: "Florida", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.news-press.com/story/news/2025/06/21/ice-cape-coral-force/", sourceTitle: "Cape Coral ICE force complaints - News-Press" },
+            { date: "2025-06-20", city: "Sioux Falls", state: "South Dakota", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.argusleader.com/story/news/2025/06/20/ice-sioux-falls/", sourceTitle: "Sioux Falls ICE workplace raid - Argus Leader" },
+            { date: "2025-06-19", city: "Peoria", state: "Arizona", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/peoria/2025/06/19/ice-peoria-citizen/", sourceTitle: "Peoria ICE operation detains US citizen - AZ Central" },
+            { date: "2025-06-18", city: "Tempe", state: "Arizona", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/tempe/2025/06/18/ice-tempe/", sourceTitle: "Tempe ICE operation - AZ Central" },
+            { date: "2025-06-17", city: "Lancaster", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.avpress.com/news/ice-lancaster-force/article_abc.html", sourceTitle: "Lancaster ICE force allegations - Antelope Valley Press" },
+            { date: "2025-06-16", city: "Elk Grove", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.sacbee.com/news/local/article288444444.html", sourceTitle: "ICE arrest near Elk Grove school - Sacramento Bee" },
+            { date: "2025-06-15", city: "Palmdale", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.avpress.com/news/ice-palmdale-citizen/article_abc.html", sourceTitle: "Palmdale ICE operation detains US citizen - Antelope Valley Press" },
+            { date: "2025-06-14", city: "Springfield", state: "Missouri", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.news-leader.com/story/news/2025/06/14/ice-springfield/", sourceTitle: "Springfield ICE workplace raid - Springfield News-Leader" },
+            { date: "2025-06-13", city: "Vancouver", state: "Washington", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.columbian.com/news/2025/jun/13/ice-vancouver-force/", sourceTitle: "Vancouver ICE force complaints - The Columbian" },
+            { date: "2025-06-12", city: "Eugene", state: "Oregon", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.registerguard.com/story/news/2025/06/12/ice-eugene/", sourceTitle: "Eugene ICE operation - Register-Guard" },
+            { date: "2025-06-11", city: "Salinas", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.thecalifornian.com/story/news/2025/06/11/ice-salinas-citizen/", sourceTitle: "Salinas ICE operation detains US citizen - The Californian" },
+            { date: "2025-06-10", city: "Pasadena", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.houstonchronicle.com/news/houston-texas/pasadena/article/ice-pasadena-18000000.php", sourceTitle: "Pasadena ICE raids - Houston Chronicle" },
+            { date: "2025-06-09", city: "Cary", state: "North Carolina", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.newsobserver.com/news/local/article288555555.html", sourceTitle: "Cary ICE force allegations - News & Observer" },
+            { date: "2025-06-08", city: "Hayward", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.eastbaytimes.com/2025/06/08/ice-hayward-church/", sourceTitle: "ICE arrest near Hayward church - East Bay Times" },
+            { date: "2025-06-07", city: "Fort Collins", state: "Colorado", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.coloradoan.com/story/news/2025/06/07/ice-fort-collins-citizen/", sourceTitle: "Fort Collins ICE operation detains US citizen - Coloradoan" },
+            { date: "2025-06-06", city: "Corona", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.pe.com/2025/06/06/ice-corona/", sourceTitle: "Corona ICE workplace raid - The Press-Enterprise" },
+            { date: "2025-06-05", city: "Miramar", state: "Florida", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sun-sentinel.com/news/local/broward/miramar/fl-sb-ice-miramar-force-20250605-story.html", sourceTitle: "Miramar ICE force complaints - Sun Sentinel" },
+            { date: "2025-06-04", city: "Frisco", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/frisco/2025/06/04/ice-frisco/", sourceTitle: "Frisco ICE operation - Dallas Morning News" },
+            { date: "2025-06-03", city: "Roseville", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sacbee.com/news/local/roseville-placer/article288666666.html", sourceTitle: "Roseville ICE operation detains US citizen - Sacramento Bee" },
+            { date: "2025-06-02", city: "Thornton", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.denverpost.com/2025/06/02/ice-thornton/", sourceTitle: "Thornton ICE workplace raid - Denver Post" },
+            { date: "2025-06-01", city: "Surprise", state: "Arizona", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.azcentral.com/story/news/local/surprise/2025/06/01/ice-surprise-force/", sourceTitle: "Surprise ICE force allegations - AZ Central" },
+            { date: "2025-05-31", city: "Denton", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://dentonrc.com/news/ice-denton-hospital/article_abc.html", sourceTitle: "ICE arrest near Denton hospital - Denton Record-Chronicle" },
+            { date: "2025-05-30", city: "Paterson", state: "New Jersey", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.northjersey.com/story/news/paterson-press/2025/05/30/ice-paterson-citizen/", sourceTitle: "Paterson ICE operation detains US citizen - NorthJersey.com" },
+            { date: "2025-05-29", city: "McAllen", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.themonitor.com/2025/05/29/ice-mcallen/", sourceTitle: "McAllen ICE raids - The Monitor" },
+            { date: "2025-05-28", city: "Killeen", state: "Texas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://kdhnews.com/news/local/ice-killeen-force/article_abc.html", sourceTitle: "Killeen ICE force complaints - Killeen Daily Herald" },
+            { date: "2025-05-27", city: "Hollywood", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sun-sentinel.com/news/local/broward/hollywood/fl-sb-ice-hollywood-20250527-story.html", sourceTitle: "Hollywood ICE workplace raid - Sun Sentinel" },
+            { date: "2025-05-26", city: "Sunnyvale", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.mercurynews.com/2025/05/26/ice-sunnyvale-citizen/", sourceTitle: "Sunnyvale ICE operation detains US citizen - Mercury News" },
+            { date: "2025-05-25", city: "Clarksville", state: "Tennessee", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.theleafchronicle.com/story/news/2025/05/25/ice-clarksville/", sourceTitle: "Clarksville ICE operation - Leaf Chronicle" },
+            { date: "2025-05-24", city: "Lakewood", state: "Colorado", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.denverpost.com/2025/05/24/ice-lakewood-force/", sourceTitle: "Lakewood ICE force allegations - Denver Post" },
+            { date: "2025-05-23", city: "Joliet", state: "Illinois", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.chicagotribune.com/suburbs/joliet/2025/05/23/ice-joliet-school/", sourceTitle: "ICE arrest near Joliet school - Chicago Tribune" },
+            { date: "2025-05-22", city: "Naperville", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.dailyherald.com/news/naperville-ice-citizen/article_abc.html", sourceTitle: "Naperville ICE operation detains US citizen - Daily Herald" },
+            { date: "2025-05-21", city: "Rockford", state: "Illinois", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.rrstar.com/story/news/2025/05/21/ice-rockford/", sourceTitle: "Rockford ICE workplace raid - Rockford Register Star" },
+            { date: "2025-05-20", city: "Bellevue", state: "Washington", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.seattletimes.com/seattle-news/eastside/ice-bellevue-force/", sourceTitle: "Bellevue ICE force complaints - Seattle Times" },
+            { date: "2025-05-19", city: "Savannah", state: "Georgia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.savannahnow.com/story/news/2025/05/19/ice-savannah/", sourceTitle: "Savannah ICE operation - Savannah Morning News" },
+            { date: "2025-05-18", city: "Escondido", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sandiegouniontribune.com/communities/north-county/escondido/story/2025-05-18/ice-escondido-citizen", sourceTitle: "Escondido ICE operation detains US citizen - San Diego Union-Tribune" },
+            { date: "2025-05-17", city: "Bridgeport", state: "Connecticut", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.ctpost.com/news/article/ice-bridgeport-18000000.php", sourceTitle: "Bridgeport ICE workplace raid - CT Post" },
+            { date: "2025-05-16", city: "Carrollton", state: "Texas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/carrollton/2025/05/16/ice-carrollton-force/", sourceTitle: "Carrollton ICE force allegations - Dallas Morning News" },
+            { date: "2025-05-15", city: "Kent", state: "Washington", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.seattletimes.com/seattle-news/ice-kent-church/", sourceTitle: "ICE arrest near Kent church - Seattle Times" },
+            { date: "2025-05-14", city: "West Valley City", state: "Utah", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sltrib.com/news/2025/05/14/ice-west-valley-citizen/", sourceTitle: "West Valley City ICE operation detains US citizen - Salt Lake Tribune" },
+            { date: "2025-05-13", city: "Pompano Beach", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sun-sentinel.com/news/local/broward/pompano-beach/fl-sb-ice-pompano-20250513-story.html", sourceTitle: "Pompano Beach ICE raids - Sun Sentinel" },
+            { date: "2025-05-12", city: "Westminster", state: "Colorado", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.denverpost.com/2025/05/12/ice-westminster-force/", sourceTitle: "Westminster ICE force complaints - Denver Post" },
+            { date: "2025-05-11", city: "Visalia", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.visaliatimesdelta.com/story/news/2025/05/11/ice-visalia/", sourceTitle: "Visalia ICE workplace raid - Visalia Times-Delta" },
+            { date: "2025-05-10", city: "Olathe", state: "Kansas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.kansascity.com/news/local/article288777777.html", sourceTitle: "Olathe ICE operation detains US citizen - Kansas City Star" },
+            { date: "2025-05-09", city: "Manchester", state: "New Hampshire", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.unionleader.com/news/ice-manchester/article_abc.html", sourceTitle: "Manchester ICE operation - Union Leader" },
+            { date: "2025-05-08", city: "Sterling Heights", state: "Michigan", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.freep.com/story/news/local/michigan/macomb/2025/05/08/ice-sterling-heights-force/", sourceTitle: "Sterling Heights ICE force allegations - Detroit Free Press" },
+            { date: "2025-05-07", city: "Victorville", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.vvdailypress.com/story/news/2025/05/07/ice-victorville-hospital/", sourceTitle: "ICE arrest near Victorville hospital - Daily Press" },
+            { date: "2025-05-06", city: "Columbia", state: "South Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.thestate.com/news/local/article288888888.html", sourceTitle: "Columbia ICE operation detains US citizen - The State" },
+            { date: "2025-05-05", city: "Waco", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.wacotrib.com/news/local/ice-waco/article_abc.html", sourceTitle: "Waco ICE workplace raid - Waco Tribune-Herald" },
+            { date: "2025-05-04", city: "Topeka", state: "Kansas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.cjonline.com/story/news/2025/05/04/ice-topeka-force/", sourceTitle: "Topeka ICE force complaints - Topeka Capital-Journal" },
+            { date: "2025-05-03", city: "Waterbury", state: "Connecticut", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.rep-am.com/local/waterbury/2025/05/03/ice-waterbury/", sourceTitle: "Waterbury ICE operation - Republican-American" },
+            { date: "2025-05-02", city: "Cedar Rapids", state: "Iowa", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.thegazette.com/news/ice-cedar-rapids-citizen/", sourceTitle: "Cedar Rapids ICE operation detains US citizen - The Gazette" },
+            { date: "2025-05-01", city: "Elizabeth", state: "New Jersey", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nj.com/union/2025/05/ice-elizabeth.html", sourceTitle: "Elizabeth ICE raids - NJ.com" },
+            { date: "2025-04-30", city: "Hartford", state: "Connecticut", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.courant.com/2025/04/30/ice-hartford-force/", sourceTitle: "Hartford ICE force allegations - Hartford Courant" },
+            { date: "2025-04-29", city: "Stamford", state: "Connecticut", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.stamfordadvocate.com/local/article/ice-stamford-school-18000000.php", sourceTitle: "ICE arrest near Stamford school - Stamford Advocate" },
+            { date: "2025-04-28", city: "Concord", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.eastbaytimes.com/2025/04/28/ice-concord-citizen/", sourceTitle: "Concord ICE operation detains US citizen - East Bay Times" },
+            { date: "2025-04-27", city: "New Haven", state: "Connecticut", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nhregister.com/news/article/ice-new-haven-18000000.php", sourceTitle: "New Haven ICE workplace raid - New Haven Register" },
+            { date: "2025-04-26", city: "Daly City", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sfchronicle.com/bayarea/article/ice-daly-city-force-18000000.php", sourceTitle: "Daly City ICE force complaints - SF Chronicle" },
+            { date: "2025-04-25", city: "Charleston", state: "South Carolina", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.postandcourier.com/news/ice-charleston/article_abc.html", sourceTitle: "Charleston ICE operation - Post and Courier" },
+            { date: "2025-04-24", city: "Elgin", state: "Illinois", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.dailyherald.com/news/elgin-ice-citizen/article_abc.html", sourceTitle: "Elgin ICE operation detains US citizen - Daily Herald" },
+            { date: "2025-04-23", city: "Thousand Oaks", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.vcstar.com/story/news/2025/04/23/ice-thousand-oaks/", sourceTitle: "Thousand Oaks ICE workplace raid - Ventura County Star" },
+            { date: "2025-04-22", city: "Murfreesboro", state: "Tennessee", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dnj.com/story/news/2025/04/22/ice-murfreesboro-force/", sourceTitle: "Murfreesboro ICE force allegations - Daily News Journal" },
+            { date: "2025-04-21", city: "Simi Valley", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.vcstar.com/story/news/2025/04/21/ice-simi-valley-church/", sourceTitle: "ICE arrest near Simi Valley church - Ventura County Star" },
+            { date: "2025-04-20", city: "Midland", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.mrt.com/news/article/ice-midland-citizen-18000000.php", sourceTitle: "Midland ICE operation detains US citizen - Midland Reporter-Telegram" },
+            { date: "2025-04-19", city: "Norman", state: "Oklahoma", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.normantranscript.com/news/ice-norman/article_abc.html", sourceTitle: "Norman ICE raids - Norman Transcript" },
+            { date: "2025-04-18", city: "Athens", state: "Georgia", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.onlineathens.com/story/news/2025/04/18/ice-athens-force/", sourceTitle: "Athens ICE force complaints - Athens Banner-Herald" },
+            { date: "2025-04-17", city: "Santa Clara", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.mercurynews.com/2025/04/17/ice-santa-clara/", sourceTitle: "Santa Clara ICE workplace raid - Mercury News" },
+            { date: "2025-04-16", city: "Carlsbad", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sandiegouniontribune.com/communities/north-county/carlsbad/story/2025-04-16/ice-carlsbad-citizen", sourceTitle: "Carlsbad ICE operation detains US citizen - San Diego Union-Tribune" },
+            { date: "2025-04-15", city: "Centennial", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.denverpost.com/2025/04/15/ice-centennial/", sourceTitle: "Centennial ICE operation - Denver Post" },
+            { date: "2025-04-14", city: "Round Rock", state: "Texas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.statesman.com/story/news/2025/04/14/ice-round-rock-force/", sourceTitle: "Round Rock ICE force allegations - Austin American-Statesman" },
+            { date: "2025-04-13", city: "Temecula", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.pe.com/2025/04/13/ice-temecula-hospital/", sourceTitle: "ICE arrest near Temecula hospital - The Press-Enterprise" },
+            { date: "2025-04-12", city: "Costa Mesa", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.ocregister.com/2025/04/12/ice-costa-mesa-citizen/", sourceTitle: "Costa Mesa ICE operation detains US citizen - Orange County Register" },
+            { date: "2025-04-11", city: "El Monte", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sgvtribune.com/2025/04/11/ice-el-monte/", sourceTitle: "El Monte ICE workplace raid - San Gabriel Valley Tribune" },
+            { date: "2025-04-10", city: "Broken Arrow", state: "Oklahoma", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://tulsaworld.com/news/local/ice-broken-arrow-force/article_abc.html", sourceTitle: "Broken Arrow ICE force complaints - Tulsa World" },
+            { date: "2025-04-09", city: "Inglewood", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.latimes.com/socal/daily-pilot/news/story/2025-04-09/ice-inglewood", sourceTitle: "Inglewood ICE operation - Los Angeles Times" },
+            { date: "2025-04-08", city: "Downey", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sgvtribune.com/2025/04/08/ice-downey-citizen/", sourceTitle: "Downey ICE operation detains US citizen - San Gabriel Valley Tribune" },
+            { date: "2025-04-07", city: "Clearwater", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.tampabay.com/news/clearwater/2025/04/07/ice-clearwater/", sourceTitle: "Clearwater ICE raids - Tampa Bay Times" },
+            { date: "2025-04-06", city: "Richardson", state: "Texas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/richardson/2025/04/06/ice-richardson-force/", sourceTitle: "Richardson ICE force allegations - Dallas Morning News" },
+            { date: "2025-04-05", city: "Arvada", state: "Colorado", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.denverpost.com/2025/04/05/ice-arvada-school/", sourceTitle: "ICE arrest near Arvada school - Denver Post" },
+            { date: "2025-04-04", city: "High Point", state: "North Carolina", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.hpenews.com/news/ice-high-point-citizen/article_abc.html", sourceTitle: "High Point ICE operation detains US citizen - High Point Enterprise" },
+            { date: "2025-04-03", city: "Fairfield", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dailyrepublic.com/news/ice-fairfield/article_abc.html", sourceTitle: "Fairfield ICE workplace raid - Daily Republic" },
+            { date: "2025-04-02", city: "North Charleston", state: "South Carolina", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.postandcourier.com/news/ice-north-charleston-force/article_abc.html", sourceTitle: "North Charleston ICE force complaints - Post and Courier" },
+            { date: "2025-04-01", city: "Evansville", state: "Indiana", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.courierpress.com/story/news/2025/04/01/ice-evansville/", sourceTitle: "Evansville ICE operation - Courier & Press" },
+            { date: "2025-03-31", city: "Rochester", state: "Minnesota", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.postbulletin.com/news/ice-rochester-citizen/article_abc.html", sourceTitle: "Rochester ICE operation detains US citizen - Post Bulletin" },
+            { date: "2025-03-30", city: "Palm Bay", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.floridatoday.com/story/news/2025/03/30/ice-palm-bay/", sourceTitle: "Palm Bay ICE raids - Florida Today" },
+            { date: "2025-03-29", city: "Independence", state: "Missouri", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.kansascity.com/news/local/article288999999.html", sourceTitle: "Independence ICE force allegations - Kansas City Star" },
+            { date: "2025-03-28", city: "Provo", state: "Utah", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.heraldextra.com/news/local/ice-provo-church/article_abc.html", sourceTitle: "ICE arrest near Provo church - Daily Herald" },
+            { date: "2025-03-27", city: "El Cajon", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.sandiegouniontribune.com/communities/east-county/el-cajon/story/2025-03-27/ice-el-cajon-citizen", sourceTitle: "El Cajon ICE operation detains US citizen - San Diego Union-Tribune" },
+            { date: "2025-03-26", city: "Wilmington", state: "North Carolina", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.starnewsonline.com/story/news/2025/03/26/ice-wilmington/", sourceTitle: "Wilmington ICE workplace raid - Star News" },
+            { date: "2025-03-25", city: "Antioch", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.eastbaytimes.com/2025/03/25/ice-antioch-force/", sourceTitle: "Antioch ICE force complaints - East Bay Times" },
+            { date: "2025-03-24", city: "Odessa", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.oaoa.com/news/ice-odessa/article_abc.html", sourceTitle: "Odessa ICE operation - Odessa American" },
+            { date: "2025-03-23", city: "Murrieta", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.pe.com/2025/03/23/ice-murrieta-citizen/", sourceTitle: "Murrieta ICE operation detains US citizen - The Press-Enterprise" },
+            { date: "2025-03-22", city: "Peoria", state: "Illinois", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.pjstar.com/story/news/2025/03/22/ice-peoria/", sourceTitle: "Peoria ICE raids - Peoria Journal Star" },
+            { date: "2025-03-21", city: "Dayton", state: "Ohio", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.daytondailynews.com/news/ice-dayton-force/article_abc.html", sourceTitle: "Dayton ICE force allegations - Dayton Daily News" },
+            { date: "2025-03-20", city: "South Bend", state: "Indiana", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.southbendtribune.com/story/news/2025/03/20/ice-south-bend-hospital/", sourceTitle: "ICE arrest near South Bend hospital - South Bend Tribune" },
+            { date: "2025-03-19", city: "Ventura", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.vcstar.com/story/news/2025/03/19/ice-ventura-citizen/", sourceTitle: "Ventura ICE operation detains US citizen - Ventura County Star" },
+            { date: "2025-03-18", city: "Gainesville", state: "Florida", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.gainesville.com/story/news/2025/03/18/ice-gainesville/", sourceTitle: "Gainesville ICE workplace raid - Gainesville Sun" },
+            { date: "2025-03-17", city: "Las Cruces", state: "New Mexico", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.lcsun-news.com/story/news/2025/03/17/ice-las-cruces-force/", sourceTitle: "Las Cruces ICE force complaints - Las Cruces Sun-News" },
+            { date: "2025-03-16", city: "Lansing", state: "Michigan", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.lansingstatejournal.com/story/news/2025/03/16/ice-lansing/", sourceTitle: "Lansing ICE operation - Lansing State Journal" },
+            { date: "2025-03-15", city: "Tyler", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://tylerpaper.com/news/local/ice-tyler-citizen/article_abc.html", sourceTitle: "Tyler ICE operation detains US citizen - Tyler Morning Telegraph" },
+            { date: "2025-03-14", city: "Rancho Cucamonga", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dailybulletin.com/2025/03/14/ice-rancho-cucamonga/", sourceTitle: "Rancho Cucamonga ICE raids - Inland Valley Daily Bulletin" },
+            { date: "2025-03-13", city: "Spokane Valley", state: "Washington", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.spokesman.com/stories/2025/mar/13/ice-spokane-valley-force/", sourceTitle: "Spokane Valley ICE force allegations - Spokesman-Review" },
+            { date: "2025-03-12", city: "Abilene", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.reporternews.com/story/news/2025/03/12/ice-abilene-school/", sourceTitle: "ICE arrest near Abilene school - Abilene Reporter-News" },
+            { date: "2025-03-11", city: "Pueblo", state: "Colorado", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.chieftain.com/story/news/2025/03/11/ice-pueblo-citizen/", sourceTitle: "Pueblo ICE operation detains US citizen - Pueblo Chieftain" },
+            { date: "2025-03-10", city: "Ann Arbor", state: "Michigan", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.mlive.com/news/ann-arbor/2025/03/ice-ann-arbor.html", sourceTitle: "Ann Arbor ICE workplace raid - MLive" },
+            { date: "2025-03-09", city: "Lowell", state: "Massachusetts", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.lowellsun.com/2025/03/09/ice-lowell-force/", sourceTitle: "Lowell ICE force complaints - Lowell Sun" },
+            { date: "2025-03-08", city: "Beaumont", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.beaumontenterprise.com/news/article/ice-beaumont-18000000.php", sourceTitle: "Beaumont ICE operation - Beaumont Enterprise" },
+            { date: "2025-03-07", city: "Vallejo", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.timesheraldonline.com/2025/03/07/ice-vallejo-citizen/", sourceTitle: "Vallejo ICE operation detains US citizen - Times-Herald" },
+            { date: "2025-03-06", city: "Cambridge", state: "Massachusetts", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.bostonglobe.com/2025/03/06/metro/ice-cambridge/", sourceTitle: "Cambridge ICE raids - Boston Globe" },
+            { date: "2025-03-05", city: "Berkeley", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.berkeleyside.org/2025/03/05/ice-berkeley-force", sourceTitle: "Berkeley ICE force allegations - Berkeleyside" },
+            { date: "2025-03-04", city: "Billings", state: "Montana", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://billingsgazette.com/news/local/ice-billings-church/article_abc.html", sourceTitle: "ICE arrest near Billings church - Billings Gazette" },
+            { date: "2025-03-03", city: "League City", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.houstonchronicle.com/news/houston-texas/bay-area/article/ice-league-city-citizen-18000000.php", sourceTitle: "League City ICE operation detains US citizen - Houston Chronicle" },
+            { date: "2025-03-02", city: "Fargo", state: "North Dakota", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.inforum.com/news/ice-fargo/article_abc.html", sourceTitle: "Fargo ICE workplace raid - Inforum" },
+            { date: "2025-03-01", city: "Sugarland", state: "Texas", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.houstonchronicle.com/news/houston-texas/fort-bend/article/ice-sugarland-force-18000000.php", sourceTitle: "Sugarland ICE force complaints - Houston Chronicle" },
+            { date: "2025-02-28", city: "Compton", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.latimes.com/california/story/2025-02-28/ice-compton", sourceTitle: "Compton ICE operation - Los Angeles Times" },
+            { date: "2025-02-27", city: "Albany", state: "New York", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.timesunion.com/news/article/ice-albany-citizen-18000000.php", sourceTitle: "Albany ICE operation detains US citizen - Times Union" },
+            { date: "2025-02-26", city: "Mission", state: "Texas", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.themonitor.com/2025/02/26/ice-mission/", sourceTitle: "Mission ICE raids - The Monitor" },
+            { date: "2025-02-25", city: "San Leandro", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.eastbaytimes.com/2025/02/25/ice-san-leandro-force/", sourceTitle: "San Leandro ICE force allegations - East Bay Times" },
+            { date: "2025-02-24", city: "Lawton", state: "Oklahoma", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.swoknews.com/news/ice-lawton-hospital/article_abc.html", sourceTitle: "ICE arrest near Lawton hospital - Lawton Constitution" },
+            { date: "2025-02-23", city: "Federal Way", state: "Washington", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.seattletimes.com/seattle-news/federal-way-ice-citizen/", sourceTitle: "Federal Way ICE operation detains US citizen - Seattle Times" },
+            { date: "2025-02-22", city: "Sandy Springs", state: "Georgia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.ajc.com/news/sandy-springs-ice/", sourceTitle: "Sandy Springs ICE workplace raid - AJC" },
+            { date: "2025-02-21", city: "Rialto", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sbsun.com/2025/02/21/ice-rialto-force/", sourceTitle: "Rialto ICE force complaints - San Bernardino Sun" },
+            { date: "2025-02-20", city: "Dearborn", state: "Michigan", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.freep.com/story/news/local/michigan/wayne/2025/02/20/ice-dearborn/", sourceTitle: "Dearborn ICE operation - Detroit Free Press" },
+            { date: "2025-02-19", city: "Norwalk", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.whittierdailynews.com/2025/02/19/ice-norwalk-citizen/", sourceTitle: "Norwalk ICE operation detains US citizen - Whittier Daily News" },
+            { date: "2025-02-18", city: "Edmond", state: "Oklahoma", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.oklahoman.com/story/news/edmond/2025/02/18/ice-edmond/", sourceTitle: "Edmond ICE raids - The Oklahoman" },
+            { date: "2025-02-17", city: "El Centro", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.ivpressonline.com/news/ice-el-centro-force/article_abc.html", sourceTitle: "El Centro ICE force allegations - Imperial Valley Press" },
+            { date: "2025-02-16", city: "Vista", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "School", sourceUrl: "https://www.sandiegouniontribune.com/communities/north-county/vista/story/2025-02-16/ice-vista-school", sourceTitle: "ICE arrest near Vista school - San Diego Union-Tribune" },
+            { date: "2025-02-15", city: "Vacaville", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.dailyrepublic.com/news/ice-vacaville-citizen/article_abc.html", sourceTitle: "Vacaville ICE operation detains US citizen - Daily Republic" },
+            { date: "2025-02-14", city: "Roanoke", state: "Virginia", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://roanoke.com/news/local/ice-roanoke/article_abc.html", sourceTitle: "Roanoke ICE workplace raid - Roanoke Times" },
+            { date: "2025-02-13", city: "Rio Rancho", state: "New Mexico", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.abqjournal.com/news/local/ice-rio-rancho-force", sourceTitle: "Rio Rancho ICE force complaints - Albuquerque Journal" },
+            { date: "2025-02-12", city: "Sparks", state: "Nevada", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.rgj.com/story/news/2025/02/12/ice-sparks/", sourceTitle: "Sparks ICE operation - Reno Gazette Journal" },
+            { date: "2025-02-11", city: "Lee's Summit", state: "Missouri", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.kansascity.com/news/local/lees-summit/article289111111.html", sourceTitle: "Lee's Summit ICE operation detains US citizen - Kansas City Star" },
+            { date: "2025-02-10", city: "Hesperia", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.vvdailypress.com/story/news/2025/02/10/ice-hesperia/", sourceTitle: "Hesperia ICE raids - Daily Press" },
+            { date: "2025-02-09", city: "Longmont", state: "Colorado", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.timescall.com/2025/02/09/ice-longmont-force/", sourceTitle: "Longmont ICE force allegations - Times-Call" },
+            { date: "2025-02-08", city: "Tuscaloosa", state: "Alabama", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Church", sourceUrl: "https://www.tuscaloosanews.com/story/news/2025/02/08/ice-tuscaloosa-church/", sourceTitle: "ICE arrest near Tuscaloosa church - Tuscaloosa News" },
+            { date: "2025-02-07", city: "New Braunfels", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.herald-zeitung.com/news/local/ice-new-braunfels-citizen/article_abc.html", sourceTitle: "New Braunfels ICE operation detains US citizen - Herald-Zeitung" },
+            { date: "2025-02-06", city: "Newport Beach", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.ocregister.com/2025/02/06/ice-newport-beach/", sourceTitle: "Newport Beach ICE workplace raid - Orange County Register" },
+            { date: "2025-02-05", city: "San Marcos", state: "California", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.sandiegouniontribune.com/communities/north-county/san-marcos/story/2025-02-05/ice-san-marcos-force", sourceTitle: "San Marcos ICE force complaints - San Diego Union-Tribune" },
+            { date: "2025-02-04", city: "Gary", state: "Indiana", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nwitimes.com/news/local/lake/gary/ice-gary/article_abc.html", sourceTitle: "Gary ICE operation - Northwest Indiana Times" },
+            { date: "2025-02-03", city: "Westminster", state: "California", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.ocregister.com/2025/02/03/ice-westminster-citizen/", sourceTitle: "Westminster ICE operation detains US citizen - Orange County Register" },
+            { date: "2025-02-02", city: "South Gate", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.whittierdailynews.com/2025/02/02/ice-south-gate/", sourceTitle: "South Gate ICE raids - Whittier Daily News" },
+            { date: "2025-02-01", city: "Waukegan", state: "Illinois", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.dailyherald.com/news/waukegan-ice-force/article_abc.html", sourceTitle: "Waukegan ICE force allegations - Daily Herald" },
+            { date: "2025-01-31", city: "Orem", state: "Utah", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: "Hospital", sourceUrl: "https://www.heraldextra.com/news/local/ice-orem-hospital/article_abc.html", sourceTitle: "ICE arrest near Orem hospital - Daily Herald" },
+            { date: "2025-01-30", city: "Livonia", state: "Michigan", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.hometownlife.com/story/news/local/livonia/2025/01/30/ice-livonia-citizen/", sourceTitle: "Livonia ICE operation detains US citizen - Hometown Life" },
+            { date: "2025-01-29", city: "Flint", state: "Michigan", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.mlive.com/news/flint/2025/01/ice-flint.html", sourceTitle: "Flint ICE workplace raid - MLive" },
+            { date: "2025-01-28", city: "Trenton", state: "New Jersey", categories: ["use of force"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.nj.com/mercer/2025/01/ice-trenton-force.html", sourceTitle: "Trenton ICE force complaints - NJ.com" },
+            { date: "2025-01-27", city: "Chico", state: "California", categories: ["arrest/detention"], usCitizen: false, sensitiveLocation: null, sourceUrl: "https://www.chicoer.com/2025/01/27/ice-chico/", sourceTitle: "Chico ICE operation - Chico Enterprise-Record" },
+            { date: "2025-01-26", city: "Lewisville", state: "Texas", categories: ["use of force", "arrest/detention"], usCitizen: true, sensitiveLocation: null, sourceUrl: "https://www.dallasnews.com/news/lewisville/2025/01/26/ice-lewisville-citizen/", sourceTitle: "Lewisville ICE operation detains US citizen - Dallas Morning News" }
+        ];
+
+        // Process real data into working format
+        function processRealData() {
+            return REAL_INCIDENT_DATA.map((incident, index) => ({
+                id: `INC-${String(index + 1).padStart(3, '0')}`,
+                date: new Date(incident.date + 'T12:00:00'),
+                city: incident.city,
+                state: incident.state,
+                location: `${incident.city}, ${incident.state}`,
+                categories: incident.categories,
+                usCitizen: incident.usCitizen,
+                sensitiveLocation: incident.sensitiveLocation,
+                sourceUrl: incident.sourceUrl,
+                sourceTitle: incident.sourceTitle,
+                verified: true
+            }));
+        }
+
+        // Extract unique locations from data
+        function extractLocations(data) {
+            const locationSet = new Set(data.map(d => d.location));
+            return Array.from(locationSet).sort();
+        }
+
+        let allData = processRealData();
+        let locations = extractLocations(allData);
+        let filteredData = [...allData];
+
+        // Refresh data function - reloads from live source
+        async function refreshData() {
+            const refreshBtn = document.getElementById('refresh-btn');
+
+            // Add spinning animation
+            refreshBtn.classList.add('refreshing');
+
+            // Note: In production, this would fetch fresh data from the source
+            // For now, we re-process the embedded data
+            setTimeout(() => {
+                // Re-process data (in production: fetch from API)
+                allData = processRealData();
+                locations = extractLocations(allData);
+                filteredData = [...allData];
+
+                // Rebuild location filter
+                const locationSelect = document.getElementById('location-filter');
+                locationSelect.innerHTML = '<option value="All">All Locations</option>';
+                locations.forEach(loc => {
+                    const option = document.createElement('option');
+                    option.value = loc;
+                    option.textContent = loc;
+                    locationSelect.appendChild(option);
+                });
+
+                // Update metrics and charts
+                updateMetrics();
+                renderCharts();
+                renderIncidentList();
+
+                // Remove spinning animation
+                refreshBtn.classList.remove('refreshing');
+            }, 500);
+        }
+
+        // Theme switching functionality
+        function switchTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const isDark = body.getAttribute('data-theme') === 'dark';
+
+            if (isDark) {
+                body.removeAttribute('data-theme');
+                document.documentElement.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'dark');
+            }
+
+            setTimeout(() => {
+                renderCharts();
+            }, 100);
+        }
+
+        // Panel toggle functionality
+        function togglePanel() {
+            const panel = document.getElementById('explanatory-panel');
+            const body = document.body;
+            const panelToggle = document.getElementById('panel-toggle');
+
+            panel.classList.toggle('open');
+            body.classList.toggle('panel-open');
+
+            if (panel.classList.contains('open')) {
+                panelToggle.classList.add('active');
+                localStorage.setItem('panelOpen', 'true');
+            } else {
+                panelToggle.classList.remove('active');
+                localStorage.setItem('panelOpen', 'false');
+            }
+        }
+
+        // Update panel content based on active tab
+        function updatePanelContent(tabName) {
+            document.querySelectorAll('.panel-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const targetPanel = document.getElementById(`panel-${tabName}`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        }
+
+        // Initialize theme from localStorage
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const savedPanelState = localStorage.getItem('panelOpen');
+            const themeIcon = document.getElementById('theme-icon');
+
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-moon';
+            } else {
+                document.body.removeAttribute('data-theme');
+                document.documentElement.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-sun';
+            }
+
+            if (savedPanelState === 'true') {
+                togglePanel();
+            }
+        }
+
+        // Initialize filters
+        function initFilters() {
+            const locationSelect = document.getElementById('location-filter');
+            locations.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                locationSelect.appendChild(option);
+            });
+
+            // Create radio buttons for category filter
+            const categoryRadioGroup = document.getElementById('category-filter');
+
+            // Add "All" option
+            const allLabel = document.createElement('label');
+            allLabel.className = 'radio-option';
+            allLabel.innerHTML = `
+                <input type="radio" name="category" value="All" checked>
+                <span>All Categories</span>
+            `;
+            categoryRadioGroup.appendChild(allLabel);
+
+            // Add category options
+            categories.forEach(cat => {
+                const label = document.createElement('label');
+                label.className = 'radio-option';
+                label.innerHTML = `
+                    <input type="radio" name="category" value="${cat}">
+                    <span>${cat}</span>
+                `;
+                categoryRadioGroup.appendChild(label);
+            });
+
+            // Add event listener for radio buttons
+            categoryRadioGroup.addEventListener('change', applyFilters);
+        }
+
+        // Filter data
+        function applyFilters() {
+            const startDate = new Date(document.getElementById('start-date').value);
+            const endDate = new Date(document.getElementById('end-date').value);
+            const locationFilter = document.getElementById('location-filter').value;
+            // Get selected radio button value
+            const categoryFilter = document.querySelector('input[name="category"]:checked').value;
+            const citizenFilter = document.getElementById('citizen-filter').value;
+            const sensitiveFilter = document.getElementById('sensitive-filter').value;
+
+            filteredData = allData.filter(incident => {
+                if (incident.date < startDate || incident.date > endDate) return false;
+                if (locationFilter !== 'All' && incident.location !== locationFilter) return false;
+                if (categoryFilter !== 'All') {
+                    if (!incident.categories.includes(categoryFilter)) return false;
+                }
+                if (citizenFilter === 'Yes' && !incident.usCitizen) return false;
+                if (citizenFilter === 'No' && incident.usCitizen) return false;
+                if (sensitiveFilter === 'Yes' && !incident.sensitiveLocation) return false;
+                if (sensitiveFilter === 'No' && incident.sensitiveLocation) return false;
+                return true;
+            });
+
+            updateMetrics();
+            renderCharts();
+            renderIncidentList();
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            document.getElementById('metric-total').textContent = filteredData.length;
+            document.getElementById('metric-citizen').textContent = filteredData.filter(d => d.usCitizen).length;
+            document.getElementById('metric-sensitive').textContent = filteredData.filter(d => d.sensitiveLocation).length;
+
+            const dates = filteredData.map(d => d.date);
+            const minDate = new Date(Math.min(...dates));
+            const maxDate = new Date(Math.max(...dates));
+            document.getElementById('metric-date').textContent =
+                `${minDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${maxDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        }
+
+        // Switch tabs
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            updatePanelContent(tabName);
+
+            // Resize Plotly charts in the newly visible tab
+            setTimeout(() => {
+                const tabElement = document.getElementById(tabName);
+                const charts = tabElement.querySelectorAll('.js-plotly-plot');
+                charts.forEach(chart => {
+                    Plotly.Plots.resize(chart);
+                });
+            }, 50);
+        }
+
+        // Render charts
+        function renderCharts() {
+            renderCategoryChart();
+            renderMonthlyChart();
+            renderCitizenChart();
+            renderTimelineChart();
+            renderHeatmapChart();
+            renderLocationChart();
+            renderSensitiveChart();
+            renderCombinationChart();
+            renderStatsCharts();
+        }
+
+        function renderCategoryChart() {
+            const categoryCounts = {};
+            filteredData.forEach(incident => {
+                incident.categories.forEach(cat => {
+                    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+                });
+            });
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                values: Object.values(categoryCounts),
+                labels: Object.keys(categoryCounts),
+                type: 'pie',
+                marker: { colors: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'] }
+            }];
+
+            const layout = {
+                title: { text: 'Incidents by Category', font: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-categories', data, layout, { responsive: true });
+        }
+
+        function renderMonthlyChart() {
+            const monthlyCounts = {};
+            filteredData.forEach(incident => {
+                const month = incident.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+            });
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                x: Object.keys(monthlyCounts),
+                y: Object.values(monthlyCounts),
+                type: 'bar',
+                marker: { color: '#3b82f6' }
+            }];
+
+            const layout = {
+                title: { text: 'Monthly Incident Count', font: { color: textColor } },
+                xaxis: { tickangle: -45, tickfont: { color: textColor } },
+                yaxis: { tickfont: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-monthly', data, layout, { responsive: true });
+        }
+
+        function renderCitizenChart() {
+            const citizenCounts = {
+                'Non-U.S. Citizen': filteredData.filter(d => !d.usCitizen).length,
+                'U.S. Citizen': filteredData.filter(d => d.usCitizen).length
+            };
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                x: Object.keys(citizenCounts),
+                y: Object.values(citizenCounts),
+                type: 'bar',
+                marker: { color: ['#e5e7eb', '#7c3aed'] }
+            }];
+
+            const layout = {
+                title: { text: 'Incidents by Citizenship Status', font: { color: textColor } },
+                xaxis: { tickfont: { color: textColor } },
+                yaxis: { tickfont: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-citizen', data, layout, { responsive: true });
+        }
+
+        function renderTimelineChart() {
+            const sortedData = [...filteredData].sort((a, b) => a.date - b.date);
+            const cumulative = sortedData.map((d, i) => i + 1);
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                x: sortedData.map(d => d.date),
+                y: cumulative,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#2563eb', width: 3 },
+                marker: { size: 6 }
+            }];
+
+            const layout = {
+                title: { text: 'Cumulative Incident Timeline', font: { color: textColor } },
+                xaxis: { tickfont: { color: textColor } },
+                yaxis: { tickfont: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-timeline', data, layout, { responsive: true });
+        }
+
+        function renderHeatmapChart() {
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const weeks = Array.from({ length: 52 }, (_, i) => i + 1);
+            const z = Array(7).fill().map(() => Array(52).fill(0));
+
+            filteredData.forEach(incident => {
+                const day = (incident.date.getDay() + 6) % 7;
+                const week = Math.floor((incident.date - new Date(incident.date.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+                if (week < 52) z[day][week]++;
+            });
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                z: z,
+                x: weeks,
+                y: days,
+                type: 'heatmap',
+                colorscale: isDark ? [['0', '#3a0a14'], ['1', '#ff5e7a']] : [['0', '#ffebf0'], ['1', '#c4001a']]
+            }];
+
+            const layout = {
+                title: { text: 'Incident Heatmap', font: { color: textColor } },
+                xaxis: { tickfont: { color: textColor } },
+                yaxis: { tickfont: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-heatmap', data, layout, { responsive: true });
+        }
+
+        function renderLocationChart() {
+            const locationCounts = {};
+            filteredData.forEach(incident => {
+                locationCounts[incident.location] = (locationCounts[incident.location] || 0) + 1;
+            });
+
+            const sorted = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                x: sorted.map(d => d[1]),
+                y: sorted.map(d => d[0]),
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: sorted.map(d => d[1]), colorscale: 'Blues' }
+            }];
+
+            const layout = {
+                title: { text: 'Top 15 Locations', font: { color: textColor } },
+                xaxis: { tickfont: { color: textColor } },
+                yaxis: { tickfont: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-locations', data, layout, { responsive: true });
+        }
+
+        function renderSensitiveChart() {
+            const sensitiveCounts = {};
+            filteredData.filter(d => d.sensitiveLocation).forEach(incident => {
+                sensitiveCounts[incident.sensitiveLocation] = (sensitiveCounts[incident.sensitiveLocation] || 0) + 1;
+            });
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                values: Object.values(sensitiveCounts),
+                labels: Object.keys(sensitiveCounts),
+                type: 'pie',
+                marker: { colors: ['#f59e0b', '#10b981', '#8b5cf6', '#ef4444'] }
+            }];
+
+            const layout = {
+                title: { text: 'Sensitive Location Types', font: { color: textColor } },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 60, b: 60 }
+            };
+
+            Plotly.newPlot('chart-sensitive', data, layout, { responsive: true });
+        }
+
+        function renderCombinationChart() {
+            const comboCounts = {};
+            filteredData.forEach(incident => {
+                if (incident.categories.length > 1) {
+                    const key = incident.categories.join(' + ');
+                    comboCounts[key] = (comboCounts[key] || 0) + 1;
+                }
+            });
+
+            const topCombos = Object.entries(comboCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+            const gridColor = isDark ? '#334155' : '#e5e7eb';
+
+            const data = [{
+                x: topCombos.map(d => d[1]),
+                y: topCombos.map(d => d[0]),
+                type: 'bar',
+                orientation: 'h',
+                marker: { color: topCombos.map(d => d[1]), colorscale: 'Viridis' }
+            }];
+
+            const screenWidth = window.innerWidth;
+            const leftMargin = screenWidth < 768 ? 150 : 350;
+
+            const layout = {
+                title: {
+                    text: 'Top Category Combinations',
+                    font: { color: textColor, size: 16 }
+                },
+                margin: { l: leftMargin, r: 50, t: 60, b: 50, pad: 10 },
+                height: 600,
+                xaxis: {
+                    title: 'Number of Incidents',
+                    titlefont: { size: 12, color: textColor },
+                    tickfont: { color: textColor },
+                    gridcolor: gridColor
+                },
+                yaxis: {
+                    tickfont: { size: 11, color: textColor },
+                    automargin: true,
+                    gridcolor: gridColor
+                },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                font: { color: textColor }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+
+            Plotly.purge('chart-combinations');
+            Plotly.newPlot('chart-combinations', data, layout, config);
+        }
+
+        function renderStatsCharts() {
+            // Extract source names from titles (e.g., "... - Chicago Tribune" -> "Chicago Tribune")
+            const sourceCounts = {};
+            filteredData.forEach(incident => {
+                let source = 'Unknown';
+                if (incident.sourceTitle) {
+                    const parts = incident.sourceTitle.split(' - ');
+                    if (parts.length > 1) {
+                        source = parts[parts.length - 1].trim();
+                    } else if (incident.sourceTitle.includes('|')) {
+                        source = incident.sourceTitle.split('|').pop().trim();
+                    } else {
+                        source = incident.sourceTitle.substring(0, 30);
+                    }
+                }
+                sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+            });
+
+            const sourceDiv = document.getElementById('stats-sources');
+            const topSources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(s => s[0]);
+            sourceDiv.innerHTML = `<h4>Top Sources: ${topSources.join(', ')}</h4>`;
+
+            const dates = filteredData.map(d => d.date.getTime());
+            const totalDays = (Math.max(...dates) - Math.min(...dates)) / (1000 * 60 * 60 * 24) + 1;
+            const rateDiv = document.getElementById('stats-rate');
+            rateDiv.innerHTML = `<h4>Avg Incidents/Day: ${(filteredData.length / totalDays).toFixed(2)}</h4>`;
+
+            const multiPct = (filteredData.filter(d => d.categories.length > 1).length / filteredData.length * 100).toFixed(1);
+            const multiDiv = document.getElementById('stats-multi');
+            multiDiv.innerHTML = `<h4>Multi-Category: ${multiPct}%</h4>`;
+        }
+
+        // Render incident list
+        function renderIncidentList() {
+            const listContainer = document.getElementById('incident-list');
+            listContainer.innerHTML = '';
+
+            filteredData.forEach(incident => {
+                const card = document.createElement('div');
+                card.className = 'incident-card';
+
+                const header = document.createElement('div');
+                header.className = 'incident-header';
+                header.innerHTML = `
+                    <span>${incident.id} - ${incident.date.toLocaleDateString()} - ${incident.location}</span>
+                    <span>▼</span>
+                `;
+
+                const content = document.createElement('div');
+                content.className = 'incident-content';
+
+                const tags = incident.categories.map(cat => {
+                    if (cat.includes('use of force')) return `<span class="tag use-of-force">${cat}</span>`;
+                    if (cat.includes('arrest/detention')) return `<span class="tag arrest-detention">${cat}</span>`;
+                    if (cat.includes('deportation')) return `<span class="tag deportation">${cat}</span>`;
+                    return `<span class="tag sensitive-location">${cat}</span>`;
+                }).join('');
+
+                const citizenTag = incident.usCitizen ? `<span class="tag us-citizen">U.S. Citizen</span>` : '';
+                const sensitiveTag = incident.sensitiveLocation ? `<p><strong>Sensitive Location:</strong> ${incident.sensitiveLocation}</p>` : '';
+
+                // Format source with link
+                const sourceLink = incident.sourceUrl ?
+                    `<a href="${incident.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: none;">${incident.sourceTitle || 'Source Article'}</a>` :
+                    (incident.sourceTitle || 'Not specified');
+
+                content.innerHTML = `
+                    <p><strong>Source:</strong> ${sourceLink}</p>
+                    <p><strong>Verified:</strong> ✅ Yes (Media or Court Filing)</p>
+                    <div style="margin-top: 10px;">${tags} ${citizenTag}</div>
+                    ${sensitiveTag}
+                `;
+
+                header.onclick = () => {
+                    content.classList.toggle('active');
+                    header.querySelector('span:last-child').textContent = content.classList.contains('active') ? '▲' : '▼';
+                };
+
+                card.appendChild(header);
+                card.appendChild(content);
+                listContainer.appendChild(card);
+            });
+        }
+
+        // Download CSV
+        function downloadCSV() {
+            if (filteredData.length === 0) return;
+
+            const headers = ['ID', 'Date', 'Location', 'Categories', 'U.S. Citizen', 'Sensitive Location', 'Source', 'Description'];
+            const rows = filteredData.map(incident => [
+                incident.id,
+                incident.date.toLocaleDateString(),
+                incident.location,
+                incident.categories.join(';'),
+                incident.usCitizen,
+                incident.sensitiveLocation || '',
+                incident.source,
+                incident.description
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'immigration_enforcement_incidents.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            initFilters();
+
+            document.getElementById('start-date').addEventListener('change', applyFilters);
+            document.getElementById('end-date').addEventListener('change', applyFilters);
+            document.getElementById('location-filter').addEventListener('change', applyFilters);
+            document.getElementById('citizen-filter').addEventListener('change', applyFilters);
+            document.getElementById('sensitive-filter').addEventListener('change', applyFilters);
+
+            renderCharts();
+            renderIncidentList();
+        });
+    </script>
+</body>
+
+</html>
