@@ -1505,11 +1505,12 @@
             }];
 
             const screenWidth = window.innerWidth;
-            const leftMargin = screenWidth < 768 ? 120 : 200;
+            const leftMargin = screenWidth < 768 ? 150 : 250;
 
             const layout = {
                 title: { text: 'Top 15 Locations', font: { color: textColor, size: 16 } },
                 margin: { l: leftMargin, r: 50, t: 60, b: 50, pad: 10 },
+                height: 600,
                 xaxis: {
                     title: 'Number of Incidents',
                     titlefont: { size: 12, color: textColor },
@@ -1517,8 +1518,9 @@
                     gridcolor: gridColor
                 },
                 yaxis: {
-                    tickfont: { size: 11, color: textColor },
+                    tickfont: { size: 10, color: textColor },
                     automargin: true,
+                    tickmode: 'linear',
                     gridcolor: gridColor
                 },
                 font: { color: textColor },
