@@ -74,8 +74,8 @@
         }
 
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 100%;
+            margin: 0;
             padding: 20px;
             transition: padding-right 0.3s;
         }
@@ -188,31 +188,6 @@
             color: var(--text-secondary);
         }
 
-        /* Credits Section */
-        .credits {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: var(--text-muted);
-        }
-
-        .credits h4 {
-            font-size: 1rem;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-
-        .credits a {
-            color: var(--accent-color);
-            text-decoration: none;
-        }
-
-        .credits a:hover {
-            text-decoration: underline;
-        }
-
         /* Shift container when panel is open */
         body.panel-open .container {
             padding-right: 370px;
@@ -271,26 +246,118 @@
 
         /* Dashboard Layout */
         .dashboard {
-            display: grid;
-            grid-template-columns: 300px 1fr;
+            display: flex;
             gap: 20px;
         }
 
-        .dashboard>div:last-child {
-            min-width: 0;
-            overflow: hidden;
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+            height: fit-content;
+            transition: background-color 0.3s;
+            order: 1;
+            width: 200px;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
-        .sidebar {
+        .sidebar h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .sidebar a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+
+        .cta-panel {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .cta-panel h4 {
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .cta-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .cta-btn i {
+            font-size: 0.9rem;
+        }
+
+        .cta-primary {
+            background: var(--tag-bg-1);
+            color: var(--tag-text-1);
+        }
+
+        .cta-primary:hover {
+            background: var(--tag-text-1);
+            color: white;
+        }
+
+        .cta-secondary {
+            background: var(--tag-bg-2);
+            color: var(--tag-text-2);
+        }
+
+        .cta-secondary:hover {
+            background: var(--tag-text-2);
+            color: white;
+        }
+
+        .cta-tertiary {
+            background: var(--tag-bg-5);
+            color: var(--tag-text-5);
+        }
+
+        .cta-tertiary:hover {
+            background: var(--tag-text-5);
+            color: white;
+        }
+
+        .dashboard>.tabs {
+            order: 2;
+            min-width: 0;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .filter-panel {
             background: var(--bg-secondary);
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 2px 8px var(--shadow);
             height: fit-content;
             transition: background-color 0.3s;
+            order: 3;
+            width: 25%;
+            min-width: 280px;
+            flex-shrink: 0;
         }
 
-        .sidebar h3 {
+        .filter-panel h3 {
             margin-bottom: 20px;
             color: var(--text-primary);
         }
@@ -403,7 +470,7 @@
         .chart-grid>div {
             display: flex !important;
             justify-content: center !important;
-            align-items: center !important;
+            align-items: flex-start !important;
             min-height: 400px;
             width: 100%;
             box-sizing: border-box;
@@ -435,37 +502,38 @@
         /* Statistics Summary Cards */
         .stats-summary {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
         .stats-card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 12px 16px;
             text-align: center;
             transition: background-color 0.3s, border-color 0.3s;
         }
 
         .stats-card h4 {
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 0.85rem;
             margin: 0;
+            font-weight: 600;
         }
 
         .stats-card .stat-value {
-            font-size: 2rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: var(--accent-color);
-            margin-top: 10px;
+            margin-top: 4px;
         }
 
         .stats-card .stat-label {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 5px;
+            margin-top: 2px;
         }
 
         .incident-card {
@@ -534,6 +602,105 @@
             border: 2px solid var(--tag-text-5);
         }
 
+        /* Hierarchical Tree View */
+        .tree-node {
+            margin-bottom: 8px;
+        }
+
+        .tree-header {
+            padding: 12px 16px;
+            background: var(--bg-header);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s, border-color 0.3s;
+            user-select: none;
+        }
+
+        .tree-header:hover {
+            background: var(--border-color);
+        }
+
+        .tree-header .tree-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .tree-header .tree-icon {
+            font-size: 0.9em;
+            transition: transform 0.2s;
+        }
+
+        .tree-header.expanded .tree-icon {
+            transform: rotate(90deg);
+        }
+
+        .tree-header .tree-count {
+            background: var(--accent-color);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .tree-children {
+            display: none;
+            padding-left: 24px;
+            margin-top: 8px;
+        }
+
+        .tree-children.expanded {
+            display: block;
+        }
+
+        /* State level styling */
+        .tree-node.state-node>.tree-header {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .tree-node.state-node>.tree-header:hover {
+            background: var(--accent-hover);
+        }
+
+        .tree-node.state-node>.tree-header .tree-count {
+            background: white;
+            color: var(--accent-color);
+        }
+
+        /* City level styling */
+        .tree-node.city-node>.tree-header {
+            background: var(--bg-secondary);
+        }
+
+        /* Date level styling */
+        .tree-node.date-node>.tree-header {
+            background: transparent;
+            border-style: dashed;
+            font-weight: 500;
+        }
+
+        .tree-node.date-node>.tree-header .tree-count {
+            background: var(--tag-bg-2);
+            color: var(--tag-text-2);
+        }
+
+        /* Incident cards within tree */
+        .tree-children .incident-card {
+            margin-bottom: 8px;
+        }
+
+        .tree-children .incident-card:last-child {
+            margin-bottom: 0;
+        }
+
         .download-btn {
             background: var(--accent-color);
             color: white;
@@ -556,9 +723,26 @@
         }
 
         /* Responsive adjustments */
-        @media (max-width: 1200px) {
+        @media (max-width: 1100px) {
             .dashboard {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+
+            .sidebar {
+                order: 1;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .filter-panel {
+                order: 2;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .dashboard>.tabs {
+                order: 3;
+                max-width: 100%;
             }
 
             #explanatory-panel {
@@ -736,21 +920,6 @@
                 <p><strong>Multi-category %</strong>: High overlap suggests escalating misconduct</p>
             </div>
         </div>
-
-        <!-- Credits Section -->
-        <div class="credits">
-            <p><strong>Data Source:</strong> This dashboard tracks incidents verified by the <a
-                    href="https://oversightdemocrats.house.gov/immigration-dashboard" target="_blank"
-                    rel="noopener">House Committee on
-                    Oversight and Reform Democrats</a>. All incidents are verified by reputable media outlets or federal
-                court filings. This is an unofficial visualization tool for educational and oversight purposes.</p>
-            <br />
-            <p><strong>Note:</strong> Social media videos without corroboration are excluded. Many incidents include DHS
-                statements, though the Trump Administration has been documented making false statements, including under
-                oath, about immigration enforcement activities.</p>
-            <br />
-            <p><em>Last updated: November 2025</em></p>
-        </div>
     </div>
 
     <!-- Main Container -->
@@ -763,66 +932,53 @@
         <div class="metrics">
             <div class="metric-card">
                 <h3>Total Incidents</h3>
-                <div class="value" id="metric-total">252</div>
+                <div class="value" id="metric-total">--</div>
             </div>
             <div class="metric-card">
                 <h3>U.S. Citizen Incidents</h3>
-                <div class="value" id="metric-citizen">38</div>
+                <div class="value" id="metric-citizen">--</div>
             </div>
             <div class="metric-card">
                 <h3>Sensitive Location Incidents</h3>
-                <div class="value" id="metric-sensitive">40</div>
+                <div class="value" id="metric-sensitive">--</div>
             </div>
             <div class="metric-card">
                 <h3>Date Range</h3>
-                <div class="value" style="font-size: 1.5rem;" id="metric-date">Jan 26 - Nov 25, 2025</div>
+                <div class="value" style="font-size: 1.5rem;" id="metric-date">--</div>
             </div>
         </div>
 
         <div class="dashboard">
             <div class="sidebar">
-                <h3>Filter Incidents</h3>
+                <h3>About This Data</h3>
+                <p><strong>Data Source:</strong> <a href="https://oversightdemocrats.house.gov/immigration-dashboard"
+                        target="_blank" rel="noopener">House Committee on Oversight and Reform Democrats</a></p>
+                <p style="margin-top: 12px;"><strong>Note:</strong> All incidents are verified by reputable media
+                    outlets
+                    or federal court filings. Social media videos without corroboration are excluded.</p>
+                <p style="margin-top: 12px;"><em>Last updated: November 2025</em></p>
 
-                <div class="filter-group">
-                    <label>Date Range</label>
-                    <input type="date" id="start-date" value="2025-01-26" title="Start date for filtering incidents">
-                    <input type="date" id="end-date" value="2025-11-25" style="margin-top: 8px;"
-                        title="End date for filtering incidents">
+                <div class="cta-panel">
+                    <h4>Take Action</h4>
+                    <a href="https://oversightdemocrats.house.gov/contact/tip-line" target="_blank" rel="noopener"
+                        class="cta-btn cta-primary"
+                        title="Submit a tip about potential immigration enforcement misconduct to the House Oversight Committee">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Report Potential Wrongdoing
+                    </a>
+                    <a href="https://oversightdemocrats.house.gov" target="_blank" rel="noopener"
+                        class="cta-btn cta-tertiary"
+                        title="Visit the official House Committee on Oversight and Reform Democrats website">
+                        <i class="fas fa-landmark"></i>
+                        House Oversight Committee
+                    </a>
+                    <a href="https://oversightdemocrats.house.gov/news" target="_blank" rel="noopener"
+                        class="cta-btn cta-secondary"
+                        title="Read the latest news and press releases from the House Oversight Committee Democrats">
+                        <i class="fas fa-newspaper"></i>
+                        Latest News
+                    </a>
                 </div>
-
-                <div class="filter-group">
-                    <label>Location</label>
-                    <select id="location-filter" title="Filter incidents by location">
-                        <option value="All">All Locations</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Incident Category</label>
-                    <div id="category-filter" class="radio-group">
-                        <!-- Radio buttons will be inserted here -->
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <label>U.S. Citizen Involved</label>
-                    <select id="citizen-filter" title="Filter incidents by U.S. citizen involvement">
-                        <option value="All">All</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Sensitive Location</label>
-                    <select id="sensitive-filter" title="Filter incidents by sensitive location involvement">
-                        <option value="All">All</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                </div>
-
-                <button class="download-btn" onclick="downloadCSV()">Download Filtered Data</button>
             </div>
 
             <div class="tabs">
@@ -861,15 +1017,60 @@
                 </div>
 
                 <div id="statistics" class="tab-content">
-                    <div id="chart-combinations" class="chart-full"></div>
-                    <div id="chart-category-breakdown" class="chart-full"></div>
-                    <div id="chart-citizen-category" class="chart-full"></div>
                     <div class="stats-summary">
                         <div class="stats-card" id="stats-sources"></div>
                         <div class="stats-card" id="stats-rate"></div>
                         <div class="stats-card" id="stats-multi"></div>
                     </div>
+                    <div id="chart-combinations" class="chart-full"></div>
+                    <div id="chart-category-breakdown" class="chart-full"></div>
+                    <div id="chart-citizen-category" class="chart-full"></div>
                 </div>
+            </div>
+
+            <div class="filter-panel">
+                <h3>Filter Incidents</h3>
+
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <input type="date" id="start-date" value="2025-01-26" title="Start date for filtering incidents">
+                    <input type="date" id="end-date" value="2025-11-28" style="margin-top: 8px;"
+                        title="End date for filtering incidents">
+                </div>
+
+                <div class="filter-group">
+                    <label>Location</label>
+                    <select id="location-filter" title="Filter incidents by location">
+                        <option value="All">All Locations</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Incident Category</label>
+                    <div id="category-filter" class="radio-group">
+                        <!-- Radio buttons will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>U.S. Citizen Involved</label>
+                    <select id="citizen-filter" title="Filter incidents by U.S. citizen involvement">
+                        <option value="All">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Sensitive Location</label>
+                    <select id="sensitive-filter" title="Filter incidents by sensitive location involvement">
+                        <option value="All">All</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+
+                <button class="download-btn" onclick="downloadCSV()">Download Filtered Data</button>
             </div>
         </div>
     </div>
@@ -1430,9 +1631,7 @@
         function renderPlotlyChart(containerId, data, layout, config = { responsive: true }) {
             const container = document.getElementById(containerId);
             if (container) {
-                Plotly.purge(container);
-                container.innerHTML = '';
-                Plotly.newPlot(container, data, layout, config);
+                Plotly.react(container, data, layout, config);
             }
         }
 
@@ -2168,56 +2367,141 @@
             `;
         }
 
-        // Render incident list
+        // Render incident list as hierarchical tree
         function renderIncidentList() {
             const listContainer = document.getElementById('incident-list');
             listContainer.innerHTML = '';
 
+            // Group incidents by state -> city -> date
+            const hierarchy = {};
             filteredData.forEach(incident => {
-                const card = document.createElement('div');
-                card.className = 'incident-card';
+                const state = incident.state;
+                const city = incident.city;
+                const dateStr = incident.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
-                const header = document.createElement('div');
-                header.className = 'incident-header';
-                header.innerHTML = `
-                    <span>${incident.id} - ${incident.date.toLocaleDateString()} - ${incident.location}</span>
-                    <span>▼</span>
-                `;
-
-                const content = document.createElement('div');
-                content.className = 'incident-content';
-
-                const tags = incident.categories.map(cat => {
-                    if (cat.includes('use of force')) return `<span class="tag use-of-force">${cat}</span>`;
-                    if (cat.includes('arrest/detention')) return `<span class="tag arrest-detention">${cat}</span>`;
-                    if (cat.includes('deportation')) return `<span class="tag deportation">${cat}</span>`;
-                    return `<span class="tag sensitive-location">${cat}</span>`;
-                }).join('');
-
-                const citizenTag = incident.usCitizen ? `<span class="tag us-citizen">U.S. Citizen</span>` : '';
-                const sensitiveTag = incident.sensitiveLocation ? `<p><strong>Sensitive Location:</strong> ${incident.sensitiveLocation}</p>` : '';
-
-                // Format source with link
-                const sourceLink = incident.sourceUrl ?
-                    `<a href="${incident.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: none;">${incident.sourceTitle || 'Source Article'}</a>` :
-                    (incident.sourceTitle || 'Not specified');
-
-                content.innerHTML = `
-                    <p><strong>Source:</strong> ${sourceLink}</p>
-                    <p><strong>Verified:</strong> ✅ Yes (Media or Court Filing)</p>
-                    <div style="margin-top: 10px;">${tags} ${citizenTag}</div>
-                    ${sensitiveTag}
-                `;
-
-                header.onclick = () => {
-                    content.classList.toggle('active');
-                    header.querySelector('span:last-child').textContent = content.classList.contains('active') ? '▲' : '▼';
-                };
-
-                card.appendChild(header);
-                card.appendChild(content);
-                listContainer.appendChild(card);
+                if (!hierarchy[state]) hierarchy[state] = {};
+                if (!hierarchy[state][city]) hierarchy[state][city] = {};
+                if (!hierarchy[state][city][dateStr]) hierarchy[state][city][dateStr] = [];
+                hierarchy[state][city][dateStr].push(incident);
             });
+
+            // Sort states alphabetically
+            const sortedStates = Object.keys(hierarchy).sort();
+
+            sortedStates.forEach(state => {
+                const stateIncidentCount = Object.values(hierarchy[state])
+                    .flatMap(city => Object.values(city).flat()).length;
+
+                const stateNode = createTreeNode(state, stateIncidentCount, 'state-node');
+                const stateChildren = stateNode.querySelector('.tree-children');
+
+                // Sort cities alphabetically
+                const sortedCities = Object.keys(hierarchy[state]).sort();
+
+                sortedCities.forEach(city => {
+                    const cityIncidentCount = Object.values(hierarchy[state][city]).flat().length;
+                    const cityNode = createTreeNode(city, cityIncidentCount, 'city-node');
+                    const cityChildren = cityNode.querySelector('.tree-children');
+
+                    // Sort dates descending (most recent first)
+                    const sortedDates = Object.keys(hierarchy[state][city]).sort((a, b) =>
+                        new Date(b) - new Date(a)
+                    );
+
+                    sortedDates.forEach(dateStr => {
+                        const incidents = hierarchy[state][city][dateStr];
+                        const dateNode = createTreeNode(dateStr, incidents.length, 'date-node');
+                        const dateChildren = dateNode.querySelector('.tree-children');
+
+                        incidents.forEach(incident => {
+                            const card = createIncidentCard(incident);
+                            dateChildren.appendChild(card);
+                        });
+
+                        cityChildren.appendChild(dateNode);
+                    });
+
+                    stateChildren.appendChild(cityNode);
+                });
+
+                listContainer.appendChild(stateNode);
+            });
+        }
+
+        // Helper function to create a tree node
+        function createTreeNode(label, count, nodeClass) {
+            const node = document.createElement('div');
+            node.className = `tree-node ${nodeClass}`;
+
+            const header = document.createElement('div');
+            header.className = 'tree-header';
+            header.innerHTML = `
+                <span class="tree-label">
+                    <span class="tree-icon">▶</span>
+                    <span>${label}</span>
+                </span>
+                <span class="tree-count">${count}</span>
+            `;
+
+            const children = document.createElement('div');
+            children.className = 'tree-children';
+
+            header.onclick = (e) => {
+                e.stopPropagation();
+                header.classList.toggle('expanded');
+                children.classList.toggle('expanded');
+            };
+
+            node.appendChild(header);
+            node.appendChild(children);
+            return node;
+        }
+
+        // Helper function to create an incident card
+        function createIncidentCard(incident) {
+            const card = document.createElement('div');
+            card.className = 'incident-card';
+
+            const header = document.createElement('div');
+            header.className = 'incident-header';
+            header.innerHTML = `
+                <span>${incident.id} - ${incident.sourceTitle || 'Incident'}</span>
+                <span>▼</span>
+            `;
+
+            const content = document.createElement('div');
+            content.className = 'incident-content';
+
+            const tags = incident.categories.map(cat => {
+                if (cat.includes('use of force')) return `<span class="tag use-of-force">${cat}</span>`;
+                if (cat.includes('arrest/detention')) return `<span class="tag arrest-detention">${cat}</span>`;
+                if (cat.includes('deportation')) return `<span class="tag deportation">${cat}</span>`;
+                return `<span class="tag sensitive-location">${cat}</span>`;
+            }).join('');
+
+            const citizenTag = incident.usCitizen ? `<span class="tag us-citizen">U.S. Citizen</span>` : '';
+            const sensitiveTag = incident.sensitiveLocation ? `<p><strong>Sensitive Location:</strong> ${incident.sensitiveLocation}</p>` : '';
+
+            const sourceLink = incident.sourceUrl ?
+                `<a href="${incident.sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-color); text-decoration: none;">${incident.sourceTitle || 'Source Article'}</a>` :
+                (incident.sourceTitle || 'Not specified');
+
+            content.innerHTML = `
+                <p><strong>Source:</strong> ${sourceLink}</p>
+                <p><strong>Verified:</strong> ✅ Yes (Media or Court Filing)</p>
+                <div style="margin-top: 10px;">${tags} ${citizenTag}</div>
+                ${sensitiveTag}
+            `;
+
+            header.onclick = (e) => {
+                e.stopPropagation();
+                content.classList.toggle('active');
+                header.querySelector('span:last-child').textContent = content.classList.contains('active') ? '▲' : '▼';
+            };
+
+            card.appendChild(header);
+            card.appendChild(content);
+            return card;
         }
 
         // Download CSV
@@ -2241,9 +2525,50 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'immigration_enforcement_incidents.csv';
+            a.download = generateDownloadFilename();
             a.click();
             window.URL.revokeObjectURL(url);
+        }
+
+        function generateDownloadFilename() {
+            const parts = ['incidents'];
+
+            // Location filter
+            const location = document.getElementById('location-filter').value;
+            if (location !== 'All') {
+                parts.push(location.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+            }
+
+            // Category filter
+            const categoryRadio = document.querySelector('input[name="category"]:checked');
+            if (categoryRadio && categoryRadio.value !== 'all') {
+                parts.push(categoryRadio.value.replace(/\s+/g, '-'));
+            }
+
+            // Citizen filter
+            const citizen = document.getElementById('citizen-filter').value;
+            if (citizen === 'Yes') {
+                parts.push('us-citizen');
+            } else if (citizen === 'No') {
+                parts.push('non-citizen');
+            }
+
+            // Sensitive location filter
+            const sensitive = document.getElementById('sensitive-filter').value;
+            if (sensitive === 'Yes') {
+                parts.push('sensitive-loc');
+            } else if (sensitive === 'No') {
+                parts.push('non-sensitive');
+            }
+
+            // Date range
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            if (startDate && endDate) {
+                parts.push(startDate + '_to_' + endDate);
+            }
+
+            return parts.join('_') + '.csv';
         }
 
         // Initialize
@@ -2257,8 +2582,7 @@
             document.getElementById('citizen-filter').addEventListener('change', applyFilters);
             document.getElementById('sensitive-filter').addEventListener('change', applyFilters);
 
-            renderCharts();
-            renderIncidentList();
+            applyFilters(); // Apply initial filters and render
         });
     </script>
 </body>

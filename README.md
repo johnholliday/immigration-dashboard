@@ -34,8 +34,8 @@ All incident data is scraped from the official [Oversight Immigration Enforcemen
 - Referenced in federal court filings/litigation
 - Social media videos without corroboration are excluded
 
-**Last Updated**: November 28, 2025  
-**Total Incidents**: 251
+**Last Updated**: November 28, 2025
+**Total Incidents**: 314
 
 ## Categories Tracked
 
