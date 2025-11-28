@@ -215,7 +215,8 @@
 
         /* Shift container when panel is open */
         body.panel-open .container {
-            margin-right: 350px;
+            margin-right: 175px;
+            margin-left: -175px;
         }
 
         /* Header */
@@ -518,6 +519,7 @@
 
             body.panel-open .container {
                 margin-right: 0;
+                margin-left: auto;
             }
         }
     </style>
@@ -780,10 +782,8 @@
                 </div>
 
                 <div id="statistics" class="tab-content">
-                    <div class="chart-grid">
-                        <div id="chart-combinations" class="chart-full"></div>
-                        <div id="chart-category-breakdown" class="chart-full"></div>
-                    </div>
+                    <div id="chart-combinations" class="chart-full"></div>
+                    <div id="chart-category-breakdown" class="chart-full"></div>
                     <div class="chart-grid">
                         <div id="stats-sources"></div>
                         <div id="stats-rate"></div>
@@ -1651,8 +1651,8 @@
             }];
 
             const layout = {
-                title: { 
-                    text: 'Single vs. Multiple Category Incidents', 
+                title: {
+                    text: 'Single vs. Multiple Category Incidents',
                     font: { color: textColor, size: 16 }
                 },
                 annotations: [{
