@@ -4,7 +4,7 @@ An interactive visualization of verified immigration enforcement incidents compi
 
 ## Live Demo
 
-🔗 **[View Dashboard](https://yourusername.github.io/immigration-dashboard/)** *(update after deployment)*
+🔗 **[View Dashboard](https://johnholliday.github.io/immigration-dashboard/)**
 
 ## Overview
 
