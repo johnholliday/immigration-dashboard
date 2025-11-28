@@ -663,7 +663,8 @@
         <!-- Credits Section -->
         <div class="credits">
             <p><strong>Data Source:</strong> This dashboard tracks incidents verified by the <a
-                    href="https://oversightdemocrats.house.gov/immigration-dashboard" target="_blank">House Committee on
+                    href="https://oversightdemocrats.house.gov/immigration-dashboard" target="_blank"
+                    rel="noopener">House Committee on
                     Oversight and Reform Democrats</a>. All incidents are verified by reputable media outlets or federal
                 court filings. This is an unofficial visualization tool for educational and oversight purposes.</p>
             <br />
@@ -707,13 +708,14 @@
 
                 <div class="filter-group">
                     <label>Date Range</label>
-                    <input type="date" id="start-date" value="2025-01-26">
-                    <input type="date" id="end-date" value="2025-11-25" style="margin-top: 8px;">
+                    <input type="date" id="start-date" value="2025-01-26" title="Start date for filtering incidents">
+                    <input type="date" id="end-date" value="2025-11-25" style="margin-top: 8px;"
+                        title="End date for filtering incidents">
                 </div>
 
                 <div class="filter-group">
                     <label>Location</label>
-                    <select id="location-filter">
+                    <select id="location-filter" title="Filter incidents by location">
                         <option value="All">All Locations</option>
                     </select>
                 </div>
@@ -727,7 +729,7 @@
 
                 <div class="filter-group">
                     <label>U.S. Citizen Involved</label>
-                    <select id="citizen-filter">
+                    <select id="citizen-filter" title="Filter incidents by U.S. citizen involvement">
                         <option value="All">All</option>
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
@@ -736,7 +738,7 @@
 
                 <div class="filter-group">
                     <label>Sensitive Location</label>
-                    <select id="sensitive-filter">
+                    <select id="sensitive-filter" title="Filter incidents by sensitive location involvement">
                         <option value="All">All</option>
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
