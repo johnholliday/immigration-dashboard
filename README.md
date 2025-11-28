@@ -13,17 +13,19 @@ This dashboard provides interactive visualizations of documented incidents of po
 ### Features
 
 - **Interactive Filtering**: Filter by date range, location, incident category, U.S. citizen involvement, and sensitive location enforcement
-- **Multiple Visualizations**: 
+- **Multiple Visualizations**:
   - Category distribution (pie chart)
   - Monthly trends (bar chart)
   - Cumulative timeline (line chart)
   - Weekly heatmap
-  - Geographic distribution
+  - Geographic distribution (choropleth map)
+  - Top locations breakdown
   - Sensitive location breakdown
-- **Incident Details**: Expandable cards with direct links to source articles
-- **Data Export**: Download filtered data as CSV
+- **Hierarchical Incident Browser**: Expandable tree organized by State → City → Date with source links
+- **Data Export**: Download filtered data as CSV with dynamic filename reflecting active filters
+- **Take Action Panel**: Quick links to report wrongdoing, latest news, and the Oversight Committee website
 - **Dark/Light Theme**: Toggle for accessibility
-- **Responsive Design**: Works on desktop and mobile
+- **Responsive Design**: Three-column layout (credits | visualizations | filters) that adapts to mobile
 
 ## Data Source
 
@@ -47,10 +49,19 @@ All incident data is scraped from the official [Oversight Immigration Enforcemen
 | Sensitive Location | Enforcement at schools, churches, hospitals, courthouses |
 | U.S. Citizen | Incidents involving U.S. citizens |
 
+## Take Action
+
+The dashboard includes direct links to official House Oversight Committee resources:
+
+- **[Report Potential Wrongdoing](https://oversightdemocrats.house.gov/contact/tip-line)** — Submit tips about immigration enforcement misconduct
+- **[Latest News](https://oversightdemocrats.house.gov/news)** — Press releases and updates from the Committee
+- **[Oversight Committee](https://oversightdemocrats.house.gov)** — Main Committee website
+
 ## Technology
 
 - Pure HTML/CSS/JavaScript (no build step required)
 - [Plotly.js](https://plotly.com/javascript/) for interactive charts
+- [Font Awesome](https://fontawesome.com/) for icons
 - CSS Variables for theming
 - LocalStorage for user preferences
 
