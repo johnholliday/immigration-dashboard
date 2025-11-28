@@ -780,7 +780,10 @@
                 </div>
 
                 <div id="statistics" class="tab-content">
-                    <div id="chart-combinations" class="chart-full"></div>
+                    <div class="chart-grid">
+                        <div id="chart-combinations" class="chart-full"></div>
+                        <div id="chart-category-breakdown" class="chart-full"></div>
+                    </div>
                     <div class="chart-grid">
                         <div id="stats-sources"></div>
                         <div id="stats-rate"></div>
@@ -1329,6 +1332,7 @@
             renderLocationChart();
             renderSensitiveChart();
             renderCombinationChart();
+            renderCategoryBreakdownChart();
             renderStatsCharts();
         }
 
@@ -1620,6 +1624,66 @@
 
             Plotly.purge('chart-combinations');
             Plotly.newPlot('chart-combinations', data, layout, config);
+        }
+
+        function renderCategoryBreakdownChart() {
+            const singleCategory = filteredData.filter(d => d.categories.length === 1).length;
+            const multiCategory = filteredData.filter(d => d.categories.length > 1).length;
+
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1f2937';
+
+            const data = [{
+                values: [singleCategory, multiCategory],
+                labels: ['Single Category', 'Multiple Categories'],
+                type: 'pie',
+                hole: 0.4,
+                marker: {
+                    colors: ['#3b82f6', '#8b5cf6']
+                },
+                textinfo: 'label+percent',
+                textposition: 'outside',
+                textfont: {
+                    color: textColor,
+                    size: 14
+                },
+                hovertemplate: '<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<extra></extra>'
+            }];
+
+            const layout = {
+                title: { 
+                    text: 'Single vs. Multiple Category Incidents', 
+                    font: { color: textColor, size: 16 }
+                },
+                annotations: [{
+                    font: {
+                        size: 20,
+                        color: textColor
+                    },
+                    showarrow: false,
+                    text: `${filteredData.length}<br>Total`,
+                    x: 0.5,
+                    y: 0.5
+                }],
+                showlegend: true,
+                legend: {
+                    font: { color: textColor },
+                    orientation: 'h',
+                    y: -0.1
+                },
+                font: { color: textColor },
+                plot_bgcolor: 'transparent',
+                paper_bgcolor: 'transparent',
+                margin: { l: 60, r: 60, t: 80, b: 60 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+
+            Plotly.purge('chart-category-breakdown');
+            Plotly.newPlot('chart-category-breakdown', data, layout, config);
         }
 
         function renderStatsCharts() {
