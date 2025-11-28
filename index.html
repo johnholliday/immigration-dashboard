@@ -1494,6 +1494,7 @@
 
             const isDark = document.body.getAttribute('data-theme') === 'dark';
             const textColor = isDark ? '#f1f5f9' : '#1f2937';
+            const gridColor = isDark ? '#334155' : '#e5e7eb';
 
             const data = [{
                 x: sorted.map(d => d[1]),
@@ -1503,17 +1504,35 @@
                 marker: { color: sorted.map(d => d[1]), colorscale: 'Blues' }
             }];
 
+            const screenWidth = window.innerWidth;
+            const leftMargin = screenWidth < 768 ? 120 : 200;
+
             const layout = {
-                title: { text: 'Top 15 Locations', font: { color: textColor } },
-                xaxis: { tickfont: { color: textColor } },
-                yaxis: { tickfont: { color: textColor } },
+                title: { text: 'Top 15 Locations', font: { color: textColor, size: 16 } },
+                margin: { l: leftMargin, r: 50, t: 60, b: 50, pad: 10 },
+                xaxis: {
+                    title: 'Number of Incidents',
+                    titlefont: { size: 12, color: textColor },
+                    tickfont: { color: textColor },
+                    gridcolor: gridColor
+                },
+                yaxis: {
+                    tickfont: { size: 11, color: textColor },
+                    automargin: true,
+                    gridcolor: gridColor
+                },
                 font: { color: textColor },
                 plot_bgcolor: 'transparent',
-                paper_bgcolor: 'transparent',
-                margin: { l: 60, r: 60, t: 60, b: 60 }
+                paper_bgcolor: 'transparent'
             };
 
-            Plotly.newPlot('chart-locations', data, layout, { responsive: true });
+            const config = {
+                responsive: true,
+                displayModeBar: false
+            };
+
+            Plotly.purge('chart-locations');
+            Plotly.newPlot('chart-locations', data, layout, config);
         }
 
         function renderSensitiveChart() {
